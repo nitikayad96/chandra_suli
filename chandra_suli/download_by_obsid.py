@@ -9,6 +9,7 @@ Make sure CIAO is running before running this script
 
 import subprocess
 import argparse
+import os
 
 if __name__=="__main__":
 
@@ -19,7 +20,6 @@ if __name__=="__main__":
     # default directory = current one
 
     args = parser.parse_args()
-
 
     for i in args.obsid:
 
