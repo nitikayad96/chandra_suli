@@ -13,7 +13,7 @@ import os
 
 if __name__=="__main__":
 
-    parser = argparse.ArgumentParser(description='Download EVT3 Files')
+    parser = argparse.ArgumentParser(description='Download event files and exposure map from the Chandra catalog')
     parser.add_argument("--obsid",help="Observation ID Numbers",nargs='+',type=int,required=True)
     parser.add_argument("--outdir",help="Directory where to put the output",required=False,
                         default='.')
@@ -23,7 +23,9 @@ if __name__=="__main__":
 
     for i in args.obsid:
 
-        subprocess.call("obsid_search_csc obsid=%d download=all outfile=%d.tsv filetype=evt "
+        subprocess.call("obsid_search_csc obsid=%d download=all outfile=%d.tsv filetype=exp "
                 "root=%s mode=h clobber=yes verbose=1 "
                 "columns=m.ra,m.dec,o.theta,m.extent_flag,m.var_flag" % (i, i, args.outdir), shell=True)
+
+
 
