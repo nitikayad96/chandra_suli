@@ -21,83 +21,106 @@ if __name__=="__main__":
                                                  "previously flagged variable sources")
     parser.add_argument("--bbfile",help="Path of input text file",required=True)
     parser.add_argument("--tsvfile",help="Path of tsv file",required=True)
+    parser.add_argument("--outfile", help="Path of out file", required=True)
 
     args = parser.parse_args()
 
-    #get directory path and file name from input file arguments
-    bb_dir = os.path.dirname(args.bbfile)
-    bb_file = os.path.basename(args.bbfile)
+    # get directory path and file name from input file arguments
 
-    tsv_dir = os.path.dirname(args.tsvfile)
-    tsv_file = os.path.basename(args.tsvfile)
+    bb_file_path = os.path.abspath(os.path.expandvars(os.path.expanduser(args.bbfile)))
+    tsv_file_path = os.path.abspath(os.path.expandvars(os.path.expanduser(args.tsvfile)))
 
-    with work_within_directory.work_within_directory(bb_dir):
+    # read BB data into array
+    bb_data = np.recfromtxt(bb_file_path,names=True)
 
-        # read BB data into array
-        bb_data = np.recfromtxt(bb_file,names=True)
+    # number of rows of data
+    bb_n = len(bb_data)
 
-        #number of rows of data
-        bb_n = len(bb_data)
+    # read tsv data into array
+    tsv_data = np.recfromtxt(tsv_file_path, delimiter='\t', skip_header=11,names=True)
 
-        # read tsv data into array
-        tsv_data = np.recfromtxt(tsv_file, delimiter='\t', skip_header=11,names=True)
+    # Filter out all non-variable sources
 
-        # Filter out all non-variable sources
+    variability = np.array(map(lambda x:x.replace(" ","") == "TRUE", tsv_data['var_flag']))
 
-        variability = np.array(map(lambda x:x.replace(" ","")=="TRUE", tsv_data['var_flag']))
+    idx = (variability == True)
 
-        idx = (variability==True)
+    variable_sources = tsv_data[idx]
 
-        variable_sources = tsv_data[idx]
+    with open(args.outfile,"w") as f:
 
-        filename = "check_var_%s" %bb_file
-        with open(filename,"w") as f:
+        # Pre-existing column names
+        existing_column_names = " ".join(bb_data.dtype.names)
 
-            f.write("RA Dec Tstart  Tstop   Probability Closest_Variable_Source")
-            f.write("\n")
+        f.write("# %s Closest_Variable_Source Distance\n" % existing_column_names)
 
-            if variable_sources.shape[0] == 0:
+        if variable_sources.shape[0] == 0:
 
-                for i in xrange(bb_n):
+            # No variable source in the catalog. Let's add a "None" for each entry in the new columns
 
-                    temp_list = []
+            for i in xrange(bb_n):
 
-                    for j in xrange(5):
+                temp_list = []
 
-                        temp_list.append(str(bb_data[i][j]))
+                for j in xrange(len(bb_data.dtype.names)):
 
-                    temp_list.append("None")
-                    line = "\t".join(temp_list)
-                    f.write(line)
-                    f.write("\n")
+                    temp_list.append(str(bb_data[i][j]))
 
+                temp_list.append("None")
+                temp_list.append("-1")
 
-            else:
+                line = " ".join(temp_list)
 
-                tsv_ra = variable_sources['ra']
-                tsv_dec = variable_sources['dec']
+                f.write("%s\n" % line)
 
-                for i in xrange(bb_n):
+        else:
 
-                    bb_ra = bb_data[i]['RA']
-                    bb_dec = bb_data[i]['Dec']
+            # There are variable sources in the catalog
 
-                    distances = angular_distance.angular_distance(tsv_ra,tsv_dec,bb_ra,bb_dec)
-                    idx_min = np.argmin(distances)
+            # Get their coordinates
 
-                    src_name = variable_sources['name'][idx_min]
+            tsv_ra = variable_sources['ra']
+            tsv_dec = variable_sources['dec']
 
-                    #for i in xrange(bb_n):
+            for i in xrange(bb_n):
 
-                    temp_list = []
+                # Get the coordinate of the candidate transient
 
-                    for j in xrange(5):
-                        temp_list.append(str(bb_data[i][j]))
+                bb_ra = bb_data[i]['RA']
+                bb_dec = bb_data[i]['Dec']
 
-                    temp_list.append(src_name)
-                    line = "\t".join(temp_list)
-                    f.write(line)
-                    f.write("\n")
+                # Compute angular distance between the candidate transient and all variable sources
+
+                distances = angular_distance.angular_distance(tsv_ra,tsv_dec,bb_ra,bb_dec, unit='arcsec')
+
+                # Get the position of the minimum distance
+
+                idx_min = np.argmin(distances)
+
+                # Get the name of the closest variable source
+
+                src_name = variable_sources['name'][idx_min]
+
+                # Replace any space in the name with an underscore
+                src_name = src_name.replace(" ","_")
+
+                temp_list = []
+
+                for j in xrange(len(bb_data.dtype.names)):
+
+                    temp_list.append(str(bb_data[i][j]))
+
+                # Fill the column "Closest_Variable_Source" with the name of the source
+
+                temp_list.append(src_name)
+
+                # Fill the column with the angular distance
+
+                temp_list.append(str(distances[idx_min]))
+
+                line = " ".join(temp_list)
+
+                f.write("%s\n" % line)
 
 
 
