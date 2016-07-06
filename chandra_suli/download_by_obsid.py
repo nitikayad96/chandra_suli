@@ -59,7 +59,7 @@ if __name__=="__main__":
     # get paths of files
     evt2 = find_files.find_files(os.getcwd(),'*evt2.fits.gz')[0]
     tsv = find_files.find_files(os.getcwd(),"%d.tsv" %args.obsid)[0]
-    exp = find_files.find_files("%s/%d" %(args.outdir,args.obsid),"*exp3.fits.gz")[0]
+    exp = find_files.find_files(os.getcwd(),"*exp3.fits.gz")[0]
 
     #move evt2 file and delete empty directories
 
