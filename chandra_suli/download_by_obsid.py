@@ -20,8 +20,7 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Download event files and exposure map from the Chandra catalog')
     parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True)
-    parser.add_argument("--outdir",help="Directory where to put the output", required=False,
-                        default='.')
+
     # default directory = current one
 
     args = parser.parse_args()
@@ -40,10 +39,10 @@ if __name__=="__main__":
 
         #Download exposure map
 
-        cmd_line = ("obsid_search_csc obsid=%d download=all outfile=%d.tsv filetype=exp root=%s "
+        cmd_line = ("obsid_search_csc obsid=%d download=all outfile=%d.tsv filetype=exp "
                     "mode=h clobber=yes verbose=1 "
                     "columns=m.ra,m.dec,o.theta,m.extent_flag,m.var_flag"
-                    % (args.obsid, args.obsid, args.outdir))
+                    % (args.obsid, args.obsid))
 
         subprocess.check_call(cmd_line, shell=True)
 
@@ -53,8 +52,6 @@ if __name__=="__main__":
         subprocess.check_call(cmd_line, shell=True)
 
     #Move evt2 file and .tsv file to same directory as exposure map
-
-    outdir_path = os.path.abspath(os.path.expandvars(os.path.expanduser(args.outdir)))
 
     # get paths of files
     evt2 = find_files.find_files(os.getcwd(),'*evt2.fits.gz')[0]
