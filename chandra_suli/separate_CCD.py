@@ -21,7 +21,7 @@ if __name__=="__main__":
 
     parser.add_argument('--evtfile',help="Event file name", type=str, required=True)
 
-    parser.add_argument('--indir', help = "Directory that event file is in", type=str, required=True)
+    parser.add_argument('--indir', help = "Directory that event file is in", type=str, required=False, default='.')
 
 
     args = parser.parse_args()

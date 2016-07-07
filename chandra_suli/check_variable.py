@@ -17,7 +17,7 @@ from chandra_suli import angular_distance
 
 if __name__=="__main__":
 
-    parser = argparse.ArgumentParser(description="Take output from Bayesian block algorithm and cross match with"
+    parser = argparse.ArgumentParser(description="Take output from Bayesian block algorithm and cross match with "
                                                  "previously flagged variable sources")
     parser.add_argument("--bbfile",help="Path of input text file",required=True)
     parser.add_argument("--tsvfile",help="Path of tsv file",required=True)
