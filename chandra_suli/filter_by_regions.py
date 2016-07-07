@@ -68,6 +68,11 @@ if __name__=="__main__":
 
         temp_file = '__%d_reg_revised.fits' % (region_id)
 
+        # Remove the file if existing
+        if os.path.exists(temp_file):
+
+            os.remove(temp_file)
+
         cmd_line = 'dmcopy %s[SRCREG][SHAPE=Ellipse] %s clobber=yes' % (region_file, temp_file)
 
         if args.debug:
@@ -114,7 +119,7 @@ if __name__=="__main__":
     # Now fix the COMPONENT column (each region must be a different component, otherwise
     # dmcopy will crash)
 
-    fits_file = pyfits.open(all_regions_file, mode='update')
+    fits_file = pyfits.open(all_regions_file, mode='update',memmap=False)
 
     fits_file['SRCREG'].data.COMPONENT[:] = range(fits_file['SRCREG'].data.shape[0])
 
@@ -123,6 +128,11 @@ if __name__=="__main__":
     # Finally filter the file
 
     print("Filtering event file...")
+
+    # Remove the outfile if existing
+    if os.path.exists(args.outfile):
+
+        os.remove(args.outfile)
 
     cmd_line = 'dmcopy \"%s[exclude sky=region(%s)]\" ' \
                '%s opt=all clobber=yes' % (event_file_abspath, all_regions_file, args.outfile)
@@ -141,3 +151,7 @@ if __name__=="__main__":
         for file in files_to_remove:
 
             os.remove(file)
+
+    else:
+
+        print("\n\nWARNING: did not remove temporary files because we are in debug mode")
