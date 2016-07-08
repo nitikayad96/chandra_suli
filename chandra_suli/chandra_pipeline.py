@@ -18,6 +18,8 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    # Download files
+
     cmd_line = "download_by_obsid.py --obsid %d" %args.obsid
 
     subprocess.check_call(cmd_line,shell=True)
@@ -27,6 +29,21 @@ if __name__=="__main__":
     expfile = os.path.basename(find_files.find_files(os.getcwd(),"*exp3.fits.gz")[0])
     filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
+    # Filter regions
+
     cmd_line = "filter_by_regions.py --evtfile %s --outfile %s" %(evtfile, filtered_evtfile)
 
     subprocess.check_call(cmd_line,shell=True)
+
+    # Separate CCDs
+
+    cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
+
+    subprocess.check_call(cmd_line,shell=True)
+
+    ccd_files = find_files.find_files('.','ccd*fits')
+
+    print ccd_files
+
+    for ccd_file in ccd_files:
+
