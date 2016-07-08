@@ -21,6 +21,8 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    print "Separating by CCD..."
+
     for ccd_id in xrange(10):
 
         ccd_file = "ccd_%s_%s" %(ccd_id, args.evtfile)
