@@ -11,9 +11,7 @@ Make sure CIAO is running before running this script
 import subprocess
 import argparse
 import os
-
-from chandra_suli import work_within_directory
-
+import astropy.io.fits as pyfits
 
 if __name__=="__main__":
 
@@ -21,26 +19,26 @@ if __name__=="__main__":
 
     parser.add_argument('--evtfile',help="Event file name", type=str, required=True)
 
-    parser.add_argument('--indir', help = "Directory that event file is in", type=str, required=False, default='.')
-
-
     args = parser.parse_args()
 
-    # Transform the input directory using its absolute path, expand environment variables which might
-    # have been used by the user, and expand the "~" (if needed)
-    evt_abspath = os.path.abspath(os.path.expandvars(os.path.expanduser(args.indir)))
+    for ccd_id in xrange(10):
 
-    #check that directory exists
-    if not os.path.exists(evt_abspath):
+        ccd_file = "ccd_%s_%s" %(ccd_id, args.evtfile)
 
-        raise IOError("Input dir %s does not exist!" % evt_abspath)
+        cmd_line = "dmcopy %s[EVENTS][ccd_id=%s] %s clobber=yes" %(args.evtfile, ccd_id, ccd_file)
 
-    with work_within_directory.work_within_directory(evt_abspath):
+        subprocess.check_call(cmd_line,shell=True)
 
-        for ccd_id in xrange(10):
+        # check if certain CCD files are empty and then delete them if so
 
-            cmd_line = "dmcopy %s[EVENTS][ccd_id=%s] ccd_%s_%s clobber=yes" %(args.evtfile, ccd_id, ccd_id, args.evtfile)
-            subprocess.check_call(cmd_line,shell=True)
+        f = pyfits.open("%s" % (ccd_file))
+        ccd_data = f[1].data
+
+        if len(ccd_data) == 0:
+
+            os.remove(ccd_file)
+
+        f.close()
 
 
 
