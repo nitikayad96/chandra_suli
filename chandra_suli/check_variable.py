@@ -31,7 +31,7 @@ if __name__=="__main__":
     tsv_file_path = os.path.abspath(os.path.expandvars(os.path.expanduser(args.tsvfile)))
 
     # read BB data into array
-    bb_data = np.recfromtxt(bb_file_path,names=True)
+    bb_data = np.array(np.recfromtxt(bb_file_path,names=True), ndmin=1)
 
     # number of rows of data
     bb_n = len(bb_data)
