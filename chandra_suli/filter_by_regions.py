@@ -25,7 +25,6 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Filter known sources out of event file')
 
-    parser.add_argument("--indir", help="Directory containing the region files", type=str, required=True)
 
     parser.add_argument('--evtfile',help="Name of the event file", type=str, required=True)
 
@@ -37,24 +36,9 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    # Transform the input directory using its absolute path, expand environment variables which might
-    # have been used by the user, and expand the "~" (if needed)
-    indir_abspath = os.path.abspath(os.path.expandvars(os.path.expanduser(args.indir)))
-
-    # Transform also the event file in the same way
-    event_file_abspath = os.path.abspath(os.path.expandvars(os.path.expanduser(args.evtfile)))
-
-    if not os.path.exists(event_file_abspath):
-
-        raise IOError("File %s does not exist!" % event_file_abspath)
-
-    if not os.path.exists(indir_abspath):
-
-        raise IOError("Input dir %s does not exist!" % indir_abspath)
-
     #creates text file with name of all level 3 region files for given Obs ID
 
-    region_files = find_files.find_files(indir_abspath, "*reg3.fits.gz")
+    region_files = find_files.find_files('.', "*reg3.fits.gz")
 
     n_reg = len(region_files)
 
@@ -135,7 +119,7 @@ if __name__=="__main__":
         os.remove(args.outfile)
 
     cmd_line = 'dmcopy \"%s[exclude sky=region(%s)]\" ' \
-               '%s opt=all clobber=yes' % (event_file_abspath, all_regions_file, args.outfile)
+               '%s opt=all clobber=yes' % (args.evtfile, all_regions_file, args.outfile)
 
     if args.debug:
 
