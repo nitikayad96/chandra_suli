@@ -25,8 +25,8 @@ if __name__=="__main__":
 
     parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True)
     parser.add_argument("--debug", help="Debug mode (yes or no)", type=bool, required=False, default=False)
-    
-    # contents of download_by_obsid.py
+
+    # DOWNLOAD OBSERVATION FILES
 
     # default directory = current one
 
@@ -75,7 +75,7 @@ if __name__=="__main__":
 
     evtfile = os.path.basename(evt2)
 
-    # contents of filter_by_regions.py
+    # FILTER REGIONS
 
     #creates text file with name of all level 3 region files for given Obs ID
 
@@ -153,16 +153,16 @@ if __name__=="__main__":
 
     print("Filtering event file...")
 
-    outfile = "%d_filtered.fits" %args.obsid
+    evtfile_filtered = "%d_filtered.fits" % args.obsid
 
     # Remove the outfile if existing
 
-    if os.path.exists(outfile):
+    if os.path.exists(evtfile_filtered):
 
-        os.remove(outfile)
+        os.remove(evtfile_filtered)
 
     cmd_line = 'dmcopy \"%s[exclude sky=region(%s)]\" ' \
-               '%s opt=all clobber=yes' % (evtfile, all_regions_file, outfile)
+               '%s opt=all clobber=yes' % (evtfile, all_regions_file, evtfile_filtered)
 
     if args.debug:
 
@@ -182,5 +182,32 @@ if __name__=="__main__":
     else:
 
         print("\n\nWARNING: did not remove temporary files because we are in debug mode")
+
+    # SEPARATE BY CCD
+
+    print("Separating by CCD...")
+
+    for ccd_id in xrange(10):
+
+        ccd_file = "%d_filtered_ccd_%s.fits" %(args.obsid, ccd_id)
+
+        cmd_line = "dmcopy %s[EVENTS][ccd_id=%s] %s clobber=yes" \
+                   % (evtfile_filtered, ccd_id, ccd_file)
+
+        subprocess.check_call(cmd_line, shell=True)
+
+        # check if certain CCD files are empty and then delete them if so
+
+        f = pyfits.open("%s" %(ccd_file))
+        ccd_data = f[1].data
+
+        if len(ccd_data)==0:
+
+            os.remove(ccd_file)
+
+        f.close()
+
+
+
 
 
