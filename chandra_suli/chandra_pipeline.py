@@ -43,7 +43,20 @@ if __name__=="__main__":
 
     ccd_files = find_files.find_files('.','ccd*fits')
 
-    print ccd_files
-
     for ccd_file in ccd_files:
+
+        cmd_line = "xtdac.py -e %s -x %s -w no" %(ccd_file, expfile)
+        subprocess.check_call(cmd_line,shell=True)
+
+
+
+    ccd_bb_files = find_files.find_files('.','ccd*txt')
+
+    for ccd_bb_file in ccd_bb_files:
+
+        og_file = os.path.basename(ccd_bb_file)
+
+        check_var_file = "check_var_%s" %og_file
+
+        cmd_line = "check_variable.py --bbfile %s --tsvfile %s --outfile %s" %(ccd_bb_file,tsvfile,check_var_file)
 
