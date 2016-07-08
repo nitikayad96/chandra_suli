@@ -25,5 +25,8 @@ if __name__=="__main__":
     evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*evt2.fits.gz')[0])
     tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%d.tsv" %args.obsid)[0])
     expfile = os.path.basename(find_files.find_files(os.getcwd(),"*exp3.fits.gz")[0])
+    filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
-    cmd_line = ""
+    cmd_line = "filter_by_regions.py --evtfile %s --outfile %s" %(evtfile, filtered_evtfile)
+
+    subprocess.check_call(cmd_line,shell=True)
