@@ -66,6 +66,9 @@ if __name__=="__main__":
 
     shutil.rmtree(temp_dir)
 
+    evtfile = os.path.basename(evt2)
+    expfile = os.path.basename(exp)
+    tsvfile = os.path.basename(tsv)
 
 
 
