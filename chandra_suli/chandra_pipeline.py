@@ -14,8 +14,29 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Download event files and exposure map from the Chandra catalog')
 
-    parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True)
-    parser.add_argument("--cpu", help = "Number of CPUs used", type=int, required=False, default=1)
+    parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
+
+    parser.add_argument("-c", "--ncpus", help="Number of CPUs to use (default=1)",
+                        type=int, default=1, required=False)
+
+    parser.add_argument("-p", "--typeIerror",
+                        help="Type I error probability for the Bayesian Blocks algorithm.",
+                        type=float,
+                        default=1e-5,
+                        required=False)
+
+    parser.add_argument("-s", "--sigmaThreshold",
+                        help="Threshold for the final significance. All intervals found "
+                             "by the bayesian blocks "
+                             "algorithm which does not surpass this threshold will not be saved in the "
+                             "final file.",
+                        type=float,
+                        default=5.0,
+                        required=False)
+
+    parser.add_argument("-e1","--emin",help="Minimum energy (eV)",type=int,required=True)
+
+    parser.add_argument("-e2","--emax",help="Maximum energy (eV)",type=int,required=True)
 
     args = parser.parse_args()
 
@@ -32,7 +53,7 @@ if __name__=="__main__":
 
     # Filter regions
 
-    cmd_line = "filter_by_regions.py --evtfile %s --outfile %s" %(evtfile, filtered_evtfile)
+    cmd_line = "filter_by_regions.py --evtfile %s --outfile %s --emin %d --emax %d" %(evtfile, filtered_evtfile, args.emin, args.emax)
 
     subprocess.check_call(cmd_line,shell=True)
 
@@ -48,7 +69,8 @@ if __name__=="__main__":
 
     for ccd_file in ccd_files:
 
-        cmd_line = "xtdac.py -e %s -x %s -w no -c %d" %(ccd_file, expfile, args.cpu)
+        cmd_line = "xtdac.py -e %s -x %s -w no -c %d -p %d -s %d" \
+                   %(ccd_file, expfile, args.cpu, args.typeIerror, args.sigmaThreshold)
         subprocess.check_call(cmd_line,shell=True)
 
 
