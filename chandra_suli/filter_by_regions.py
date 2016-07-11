@@ -32,6 +32,11 @@ if __name__=="__main__":
 
     parser.add_argument("--debug", help="Debug mode (yes or no)", type=bool, required=False, default=False)
 
+    parser.add_argument("--emin",help="Minimum energy (eV)",type=int,required=True)
+
+    parser.add_argument("--emax",help="Maximum energy (eV)",type=int,required=True)
+
+
     # assumption = all level 3 region files and event file are already downloaded into same directory
 
     args = parser.parse_args()
@@ -80,7 +85,7 @@ if __name__=="__main__":
     # Write all the temp files in a text file, which will be used by dmmerge
     regions_list_file = "__all_regions_list.txt"
 
-    with open(regions_list_file,"w+") as f:
+    with open(regions_list_file, "w+") as f:
 
         for temp_file in temp_files:
 
@@ -118,8 +123,20 @@ if __name__=="__main__":
 
         os.remove(args.outfile)
 
+    # first filter regions out, create temp file
+
+    temp_filter = '__temp__%s' %args.outfile
+
     cmd_line = 'dmcopy \"%s[exclude sky=region(%s)]\" ' \
-               '%s opt=all clobber=yes' % (args.evtfile, all_regions_file, args.outfile)
+               '%s opt=all clobber=yes' % (args.evtfile, all_regions_file, temp_filter)
+
+    if args.debug:
+
+        print(cmd_line)
+
+    subprocess.check_call(cmd_line, shell=True)
+
+    cmd_line = 'dmcopy %s[energy=%d:%d] %s opt=all clobber=yes' %(temp_filter, args.emin, args.emax, args.outfile)
 
     if args.debug:
 
