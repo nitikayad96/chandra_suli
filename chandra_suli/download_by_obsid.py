@@ -54,9 +54,24 @@ if __name__=="__main__":
     #Move evt2 file and .tsv file to same directory as exposure map
 
     # get paths of files
-    evt2 = find_files.find_files(os.getcwd(),'*evt2.fits.gz')[0]
-    tsv = find_files.find_files(os.getcwd(),"%d.tsv" %args.obsid)[0]
-    exp = find_files.find_files(os.getcwd(),"*exp3.fits.gz")[0]
+    evt2_files = find_files.find_files(os.getcwd(), '*%s*evt2.fits.gz' % args.obsid)
+    tsv_files = find_files.find_files(os.getcwd(), "%d.tsv" % args.obsid)
+    exp_files = find_files.find_files(os.getcwd(), "*%s*exp3.fits.gz" % args.obsid)
+
+    if len(evt2_files) > 1 or len(tsv_files) > 1 or len(exp_files) > 1:
+
+        raise RuntimeError("More than one event file in this tree. Did you clean up the directory before running "
+                           "this script?")
+
+    elif len(evt2_files)==0 or len(tsv_files)==0 or len(exp_files)==0:
+
+        raise RuntimeError("Could not find downloaded files. Maybe download failed?")
+
+    else:
+
+        evt2 = evt2_files[0]
+        tsv = tsv_files[0]
+        exp = exp_files[0]
 
     #move evt2 file and delete empty directories
 
