@@ -43,14 +43,17 @@ if __name__=="__main__":
 
     ccd_files = find_files.find_files('.','ccd*fits')
 
+    # Run Bayesian Blocks algorithm
+
     for ccd_file in ccd_files:
 
         cmd_line = "xtdac.py -e %s -x %s -w no" %(ccd_file, expfile)
         subprocess.check_call(cmd_line,shell=True)
 
 
-
     ccd_bb_files = find_files.find_files('.','ccd*txt')
+
+    # Check for closest variable source
 
     for ccd_bb_file in ccd_bb_files:
 
@@ -59,4 +62,6 @@ if __name__=="__main__":
         check_var_file = "check_var_%s" %og_file
 
         cmd_line = "check_variable.py --bbfile %s --tsvfile %s --outfile %s" %(ccd_bb_file,tsvfile,check_var_file)
+
+        subprocess.check_call(cmd_line,shell=True)
 
