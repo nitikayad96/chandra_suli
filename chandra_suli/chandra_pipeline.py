@@ -15,6 +15,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Download event files and exposure map from the Chandra catalog')
 
     parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True)
+    parser.add_argument("--cpu", help = "Number of CPUs used", type=int, required=False, default=1)
 
     args = parser.parse_args()
 
@@ -47,7 +48,7 @@ if __name__=="__main__":
 
     for ccd_file in ccd_files:
 
-        cmd_line = "xtdac.py -e %s -x %s -w no" %(ccd_file, expfile)
+        cmd_line = "xtdac.py -e %s -x %s -w no -c %d" %(ccd_file, expfile, args.cpu)
         subprocess.check_call(cmd_line,shell=True)
 
 
