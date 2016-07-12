@@ -45,7 +45,7 @@ if __name__=="__main__":
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# %s Closest_Variable_Source Separation Obsid\n" % existing_column_names)
+        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid\n" % existing_column_names)
 
 
         for i in xrange(bb_n):
