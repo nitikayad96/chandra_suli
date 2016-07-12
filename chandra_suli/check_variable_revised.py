@@ -93,6 +93,8 @@ if __name__=="__main__":
                 temp_list.append("None")
                 temp_list.append(str(-1))
                 temp_list.append(str(0))
+                temp_list.append(str(0))
+                temp_list.append(str(0))
 
                 line = " ".join(temp_list)
 
@@ -125,6 +127,8 @@ if __name__=="__main__":
                 temp_list.append(src_name)
                 temp_list.append(str(src_sepn))
                 temp_list.append(str(src_obsid))
+                temp_list.append(str(psf_size))
+                temp_list.append(str(float(src_sepn)/float(psf_size)))
 
                 line = " ".join(temp_list)
 
