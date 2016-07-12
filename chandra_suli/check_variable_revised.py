@@ -47,7 +47,6 @@ if __name__=="__main__":
 
         f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid\n" % existing_column_names)
 
-
         for i in xrange(bb_n):
 
             ra = bb_data['RA'][i]
@@ -69,34 +68,58 @@ if __name__=="__main__":
 
             # Find source with minimum separation
 
-            idx_min = np.argmin(variable_sources['sepn'])
+            if variable_sources.shape[0] == 0:
 
-            # Get the name/separation/obsid of the closest variable source
+                # No variable source in the catalog. Let's add a "None" for each entry in the new columns
 
-            src_name = variable_sources['name'][idx_min]
-            src_sepn = variable_sources['sepn'][idx_min]
-            src_obsid = variable_sources['obsid'][idx_min]
+                temp_list = []
 
-            # Replace any space in the name with an underscore
-            src_name = src_name.replace(" ", "_")
-
-            temp_list = []
-
-            for j in xrange(len(bb_data.dtype.names)):
-
-                temp_list.append(str(bb_data[i][j]))
+                for j in xrange(len(bb_data.dtype.names)):
+                    temp_list.append(str(bb_data[i][j]))
 
                 # Fill the columns "Closest_Variable_Source","Separation","Obsid" with appropriate info
 
-            temp_list.append(src_name)
-            temp_list.append(str(src_sepn))
-            temp_list.append(str(src_obsid))
+                temp_list.append("None")
+                temp_list.append(str(-1))
+                temp_list.append(str(0))
 
-            line = " ".join(temp_list)
+                line = " ".join(temp_list)
 
-            f.write("%s\n" % line)
+                f.write("%s\n" % line)
 
-            os.remove(temp_file)
+                os.remove(temp_file)
+
+
+            else:
+
+                idx_min = np.argmin(variable_sources['sepn'])
+
+                # Get the name/separation/obsid of the closest variable source
+
+                src_name = variable_sources['name'][idx_min]
+                src_sepn = variable_sources['sepn'][idx_min]
+                src_obsid = variable_sources['obsid'][idx_min]
+
+                # Replace any space in the name with an underscore
+                src_name = src_name.replace(" ", "_")
+
+                temp_list = []
+
+                for j in xrange(len(bb_data.dtype.names)):
+
+                    temp_list.append(str(bb_data[i][j]))
+
+                # Fill the columns "Closest_Variable_Source","Separation","Obsid" with appropriate info
+
+                temp_list.append(src_name)
+                temp_list.append(str(src_sepn))
+                temp_list.append(str(src_obsid))
+
+                line = " ".join(temp_list)
+
+                f.write("%s\n" % line)
+
+                os.remove(temp_file)
 
 
 
