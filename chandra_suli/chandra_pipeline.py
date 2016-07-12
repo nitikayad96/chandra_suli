@@ -44,6 +44,11 @@ if __name__=="__main__":
 
     parser.add_argument("-e2","--emax",help="Maximum energy (eV)",type=int,required=True)
 
+    parser.add_argument("-rs","--radius",
+                        help="Radius in arcmin in which to check for associated variables "
+                             "after determining candidate transients",
+                        type=int, required=False, default=1)
+
     args = parser.parse_args()
 
     # Get the logger
@@ -107,7 +112,8 @@ if __name__=="__main__":
 
         check_var_file = "check_var_%s" %og_file
 
-        cmd_line = "check_variable.py --bbfile %s --tsvfile %s --outfile %s" %(ccd_bb_file,tsvfile,check_var_file)
+        cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --radius %s" \
+                   %(ccd_bb_file,check_var_file, args.radius)
 
         runner.run(cmd_line)
 
