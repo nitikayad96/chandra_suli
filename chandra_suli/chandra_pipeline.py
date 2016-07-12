@@ -90,7 +90,7 @@ if __name__=="__main__":
 
     runner.run(cmd_line)
 
-    ccd_files = find_files.find_files('.','ccd*fits')
+    ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
 
     # Run Bayesian Blocks algorithm
 
@@ -102,7 +102,7 @@ if __name__=="__main__":
         runner.run(cmd_line)
 
 
-    ccd_bb_files = find_files.find_files('.','ccd*txt')
+    ccd_bb_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
 
     # Check for closest variable source
 
