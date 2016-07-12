@@ -44,11 +44,6 @@ if __name__=="__main__":
 
     parser.add_argument("-e2","--emax",help="Maximum energy (eV)",type=int,required=True)
 
-    parser.add_argument("-rs","--radius",
-                        help="Radius in arcmin in which to check for associated variables "
-                             "after determining candidate transients",
-                        type=int, required=False, default=1)
-
     args = parser.parse_args()
 
     # Get the logger
@@ -64,9 +59,9 @@ if __name__=="__main__":
 
     runner.run(cmd_line)
 
-    evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*evt3.fits')[0])
-    tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%d.tsv" %args.obsid)[0])
-    expfile = os.path.basename(find_files.find_files(os.getcwd(),"*exp3.fits.gz")[0])
+    evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0])
+    tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0])
+    expfile = os.path.basename(find_files.find_files(os.getcwd(),"*%s*exp3.fits.gz" %args.obsid)[0])
 
     filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
@@ -102,9 +97,9 @@ if __name__=="__main__":
         runner.run(cmd_line)
 
 
-    ccd_bb_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
+    ccd_bb_files = find_files.find_files('.','ccd*%s*txt'%args.obsid)
 
-    # Check for closest variable source
+    # Check for closest variable source across any observation
 
     for ccd_bb_file in ccd_bb_files:
 
@@ -112,8 +107,8 @@ if __name__=="__main__":
 
         check_var_file = "check_var_%s" %og_file
 
-        cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --radius %s" \
-                   %(ccd_bb_file,check_var_file, args.radius)
+        cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
+                   %(ccd_bb_file,check_var_file, evtfile)
 
         runner.run(cmd_line)
 
