@@ -5,16 +5,22 @@ Run all steps of pipeline with one command
 """
 
 import argparse
-import subprocess
+import sys
 import os
 
 from chandra_suli import find_files
+from chandra_suli import logging_system
+from chandra_suli.run_command import CommandRunner
+
 
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Download event files and exposure map from the Chandra catalog')
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
+
+    parser.add_argument('-r', '--region_repo', help="Path to the repository of region files",
+                        type=str, required=True)
 
     parser.add_argument("-c", "--ncpus", help="Number of CPUs to use (default=1)",
                         type=int, default=1, required=False)
@@ -40,28 +46,44 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    # Get the logger
+
+    logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
+
+    # Get the command runner
+    runner = CommandRunner(logger)
+
     # Download files
 
     cmd_line = "download_by_obsid.py --obsid %d" %args.obsid
 
-    subprocess.check_call(cmd_line,shell=True)
+    runner.run(cmd_line)
 
-    evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*evt2.fits.gz')[0])
+    evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*evt3.fits')[0])
     tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%d.tsv" %args.obsid)[0])
     expfile = os.path.basename(find_files.find_files(os.getcwd(),"*exp3.fits.gz")[0])
+
     filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
     # Filter regions
 
-    cmd_line = "filter_by_regions.py --evtfile %s --outfile %s --emin %d --emax %d" %(evtfile, filtered_evtfile, args.emin, args.emax)
+    # Figure out the path for the regions files for this obsid
 
-    subprocess.check_call(cmd_line,shell=True)
+    region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
+
+    cmd_line = "filter_event_file.py --evtfile %s --region_dir %s --outfile %s --emin %d --emax %d" %(evtfile,
+                                                                                                      region_dir,
+                                                                                                      filtered_evtfile,
+                                                                                                      args.emin,
+                                                                                                      args.emax)
+
+    runner.run(cmd_line)
 
     # Separate CCDs
 
     cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
 
-    subprocess.check_call(cmd_line,shell=True)
+    runner.run(cmd_line)
 
     ccd_files = find_files.find_files('.','ccd*fits')
 
@@ -69,9 +91,10 @@ if __name__=="__main__":
 
     for ccd_file in ccd_files:
 
-        cmd_line = "xtdac.py -e %s -x %s -w no -c %d -p %d -s %d" \
-                   %(ccd_file, expfile, args.cpu, args.typeIerror, args.sigmaThreshold)
-        subprocess.check_call(cmd_line,shell=True)
+        cmd_line = "xtdac.py -e %s -x %s -w no -c %s -p %s -s %s" \
+                   %(ccd_file, expfile, args.ncpus, args.typeIerror, args.sigmaThreshold)
+
+        runner.run(cmd_line)
 
 
     ccd_bb_files = find_files.find_files('.','ccd*txt')
@@ -86,5 +109,5 @@ if __name__=="__main__":
 
         cmd_line = "check_variable.py --bbfile %s --tsvfile %s --outfile %s" %(ccd_bb_file,tsvfile,check_var_file)
 
-        subprocess.check_call(cmd_line,shell=True)
+        runner.run(cmd_line)
 

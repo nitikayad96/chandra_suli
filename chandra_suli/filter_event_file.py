@@ -25,8 +25,10 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Filter known sources out of event file')
 
-
     parser.add_argument('--evtfile',help="Name of the event file", type=str, required=True)
+
+    parser.add_argument('--region_dir', help="Directory containing the regions file for this obsid",
+                        type=str, required=True)
 
     parser.add_argument('--outfile', help="Name of the output (filtered) event file", type=str, required=True)
 
@@ -43,7 +45,7 @@ if __name__=="__main__":
 
     #creates text file with name of all level 3 region files for given Obs ID
 
-    region_files = find_files.find_files('.', "*reg3.fits.gz")
+    region_files = find_files.find_files(args.region_dir, "*reg3.fits.gz")
 
     n_reg = len(region_files)
 
