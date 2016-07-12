@@ -5,8 +5,8 @@ import argparse
 import numpy as np
 import sys
 import os
-from chandra_suli import work_within_directory
-from chandra_suli import angular_distance
+from chandra_suli import chandra_psf
+from chandra_suli import offaxis_angle
 from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
 
@@ -17,8 +17,8 @@ if __name__=="__main__":
                                                  "previously flagged variable sources")
     parser.add_argument("--bbfile",help="Path of input text file",required=True)
     parser.add_argument("--outfile", help="Path of out file", required=True)
-    parser.add_argument("--radius",help="Radius in arcmin in which to check for variables",
-                        type=int, required=False, default=1)
+    parser.add_argument("--eventfile", help="Event file (needed to gather the pointing of Chandra)", required=True,
+                        type=str)
 
     # Get logger for this command
 
@@ -40,20 +40,31 @@ if __name__=="__main__":
     # number of rows of data
     bb_n = len(bb_data)
 
+    # Create a PSF instance, we will use it to compute the size of the PSF at the position
+    # of the source
+
+    psf = chandra_psf.ChandraPSF()
+
     with open(args.outfile, "w") as f:
 
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid\n" % existing_column_names)
+        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid PSF_size Relative_separation\n" % existing_column_names)
 
         for i in xrange(bb_n):
 
             ra = bb_data['RA'][i]
             dec = bb_data['Dec'][i]
 
+            # Compute the radius of the PSF at the off-axis angle of this source
+
+            theta = offaxis_angle.get_offaxis_angle(ra, dec, args.eventfile)
+
+            psf_size = psf.get_psf_size(theta)
+
             temp_file = "__var_sources.tsv"
-            cmd_line = "search_csc %s,%s radius=%s outfile=%s columns=m.var_flag" %(ra,dec,args.radius,temp_file)
+            cmd_line = "search_csc %s,%s radius=%s outfile=%s columns=m.var_flag" %(ra,dec,2.0 * psf_size, temp_file)
             runner.run(cmd_line)
 
             tsv_data = np.recfromtxt(temp_file, delimiter='\t', skip_header=10, names=True)
