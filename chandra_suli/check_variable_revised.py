@@ -1,5 +1,10 @@
 #!/usr/bin/env python
 
+"""
+Take output from Bayesian block algorithm and cross check matches with previously flagged variable X-ray sources
+
+NOTE: There may be more than one obsid listed for the same source
+"""
 
 import argparse
 import numpy as np
