@@ -69,14 +69,13 @@ if __name__=="__main__":
             psf_size = psf.get_psf_size(theta)
 
             temp_file = "__var_sources.tsv"
-            cmd_line = "search_csc %s,%s radius=%s outfile=%s columns=m.var_flag" %(ra,dec,2.0 * psf_size, temp_file)
+            cmd_line = "search_csc %s,%s radius=%s outfile=%s columns=m.var_flag clobber=yes" \
+                       %(ra,dec,2.0 * psf_size, temp_file)
             runner.run(cmd_line)
 
             tsv_data = np.recfromtxt(temp_file, delimiter='\t', skip_header=10, names=True)
 
             # Filter out all non-variable sources
-
-            print type(tsv_data['var_flag'][0])
 
             variability = np.array(map(lambda x: str(x).replace(" ", "") == "TRUE", tsv_data['var_flag']))
 
