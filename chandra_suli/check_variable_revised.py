@@ -76,7 +76,9 @@ if __name__=="__main__":
 
             # Filter out all non-variable sources
 
-            variability = np.array(map(lambda x: x.replace(" ", "") == "TRUE", tsv_data['var_flag']))
+            print type(tsv_data['var_flag'][0])
+
+            variability = np.array(map(lambda x: str(x).replace(" ", "") == "TRUE", tsv_data['var_flag']))
 
             idx = (variability == True)
 
