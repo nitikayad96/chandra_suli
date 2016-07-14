@@ -23,3 +23,5 @@ class ChandraPSF(object):
         psf_size = psf.psfSize(self._pdata, energy_in_kev, angle_in_arcmin, phi, percent_level)
 
         return psf_size
+
+    # returns PSF in arcsec
