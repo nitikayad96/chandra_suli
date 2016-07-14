@@ -44,6 +44,9 @@ if __name__=="__main__":
 
     parser.add_argument("-e2","--emax",help="Maximum energy (eV)",type=int,required=True)
 
+    parser.add_argument("-v", "--verbosity", help="Info or debug", type=str, required=False, default='info',
+                        choices=['info', 'debug'])
+
     args = parser.parse_args()
 
     # Get the logger
@@ -91,8 +94,8 @@ if __name__=="__main__":
 
     for ccd_file in ccd_files:
 
-        cmd_line = "xtdac.py -e %s -x %s -w no -c %s -p %s -s %s" \
-                   %(ccd_file, expfile, args.ncpus, args.typeIerror, args.sigmaThreshold)
+        cmd_line = "xtdac.py -e %s -x %s -w no -c %s -p %s -s %s -v %s" \
+                   %(ccd_file, expfile, args.ncpus, args.typeIerror, args.sigmaThreshold, args.verbosity)
 
         runner.run(cmd_line)
 
