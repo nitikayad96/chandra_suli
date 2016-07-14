@@ -55,7 +55,8 @@ if __name__=="__main__":
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid PSF_size Relative_separation\n" % existing_column_names)
+        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid PSF_size(arcsec) Relative_separation\n"
+                % existing_column_names)
 
         for i in xrange(bb_n):
 
@@ -68,12 +69,41 @@ if __name__=="__main__":
 
             psf_size = psf.get_psf_size(theta)
 
+            # search_csc has a max search radius of 60, so put upper bound on input
+
+            if psf_size<=30:
+
+                radius = 2.0*psf_size
+
+            else:
+
+                radius = 60
+
+
             temp_file = "__var_sources.tsv"
-            cmd_line = "search_csc %s,%s radius=%s outfile=%s columns=m.var_flag clobber=yes" \
-                       %(ra,dec,2.0 * psf_size, temp_file)
+            cmd_line = "search_csc %s,%s radius=%s radunit=arcsec outfile=%s columns=m.var_flag clobber=yes" \
+                       %(ra, dec, radius, temp_file)
             runner.run(cmd_line)
 
-            tsv_data = np.recfromtxt(temp_file, delimiter='\t', skip_header=10, names=True)
+            tsv_data = np.recfromtxt(temp_file, delimiter='\t', skip_header=10, names=True,)
+
+            # Check if the data contains only one entry. If it does, we need to fix
+            # the array to the proper dimension, because np.recfromtxt makes it a 0-dimensional
+            # array
+
+            if len(tsv_data.shape) == 0:
+
+                tsv_data = np.array([tsv_data])
+
+            # # make sure var_flag is a list
+            #
+            # var_flag = tsv_data['var_flag'].tolist()
+            #
+            # if type(var_flag).__name__ != 'list':
+            #
+            #     var_flag = [var_flag]
+            #
+            # print var_flag
 
             # Filter out all non-variable sources
 
@@ -94,12 +124,13 @@ if __name__=="__main__":
                 for j in xrange(len(bb_data.dtype.names)):
                     temp_list.append(str(bb_data[i][j]))
 
-                # Fill the columns "Closest_Variable_Source","Separation","Obsid" with appropriate info
+                # Fill the columns "Closest_Variable_Source","Separation","Obsid", "PSF","Relative Separation"
+                # with appropriate info
 
                 temp_list.append("None")
                 temp_list.append(str(-1))
                 temp_list.append(str(0))
-                temp_list.append(str(0))
+                temp_list.append(str(psf_size))
                 temp_list.append(str(0))
 
                 line = " ".join(temp_list)
@@ -128,7 +159,8 @@ if __name__=="__main__":
 
                     temp_list.append(str(bb_data[i][j]))
 
-                # Fill the columns "Closest_Variable_Source","Separation","Obsid" with appropriate info
+                # Fill the columns "Closest_Variable_Source","Separation","Obsid","PSF","Relative Separation"
+                # with appropriate info
 
                 temp_list.append(src_name)
                 temp_list.append(str(src_sepn))
