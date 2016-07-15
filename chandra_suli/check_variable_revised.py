@@ -55,7 +55,7 @@ if __name__=="__main__":
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid PSF_size(arcsec) PSFfrac\n"
+        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid Theta PSF_size(arcsec) PSFfrac\n"
                 % existing_column_names)
 
         for i in xrange(bb_n):
@@ -117,12 +117,13 @@ if __name__=="__main__":
                 for j in xrange(len(bb_data.dtype.names)):
                     temp_list.append(str(bb_data[i][j]))
 
-                # Fill the columns "Closest_Variable_Source","Separation","Obsid", "PSF","PSFfrac"
+                # Fill the columns "Closest_Variable_Source","Separation","Obsid", "Theta", "PSF","PSFfrac"
                 # with appropriate info
 
                 temp_list.append("None")
                 temp_list.append(str(-1))
                 temp_list.append(str(0))
+                temp_list.append(str(theta))
                 temp_list.append(str(psf_size))
                 temp_list.append(str(0))
 
@@ -154,12 +155,13 @@ if __name__=="__main__":
 
                     temp_list.append(str(bb_data[i][j]))
 
-                # Fill the columns "Closest_Variable_Source","Separation","Obsid","PSF","PSFfrac"
+                # Fill the columns "Closest_Variable_Source","Separation","Obsid", "Theta,"PSF","PSFfrac"
                 # with appropriate info
 
                 temp_list.append(src_name)
                 temp_list.append(str(src_sepn))
                 temp_list.append(str(src_obsid))
+                temp_list.append(str(theta))
                 temp_list.append(str(psf_size))
                 temp_list.append(str(psf_frac))
 
