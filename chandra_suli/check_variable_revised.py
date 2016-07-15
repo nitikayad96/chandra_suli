@@ -55,7 +55,7 @@ if __name__=="__main__":
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid PSF_size(arcsec) Relative_separation\n"
+        f.write("# %s Closest_Variable_Source Separation(arcsec) Obsid PSF_size(arcsec) PSFfrac\n"
                 % existing_column_names)
 
         for i in xrange(bb_n):
@@ -67,21 +67,14 @@ if __name__=="__main__":
 
             theta = offaxis_angle.get_offaxis_angle(ra, dec, args.eventfile)
 
-            psf_size = psf.get_psf_size(theta)
+            psf_size = psf.get_psf_size(theta, percent_level=0.95)
 
             # search_csc has a max search radius of 60, so put upper bound on input
 
-            if psf_size<=30:
-
-                radius = 2.0*psf_size
-
-            else:
-
-                radius = 60
-
+            radius = 5.0
 
             temp_file = "__var_sources.tsv"
-            cmd_line = "search_csc %s,%s radius=%s radunit=arcsec outfile=%s columns=m.var_flag clobber=yes" \
+            cmd_line = "search_csc %s,%s radius=%s outfile=%s columns=m.var_flag clobber=yes" \
                        %(ra, dec, radius, temp_file)
             runner.run(cmd_line)
 
@@ -124,7 +117,7 @@ if __name__=="__main__":
                 for j in xrange(len(bb_data.dtype.names)):
                     temp_list.append(str(bb_data[i][j]))
 
-                # Fill the columns "Closest_Variable_Source","Separation","Obsid", "PSF","Relative Separation"
+                # Fill the columns "Closest_Variable_Source","Separation","Obsid", "PSF","PSFfrac"
                 # with appropriate info
 
                 temp_list.append("None")
@@ -153,20 +146,22 @@ if __name__=="__main__":
                 # Replace any space in the name with an underscore
                 src_name = src_name.replace(" ", "_")
 
+                psf_frac = psf.get_psf_fraction(theta, src_sepn)
+
                 temp_list = []
 
                 for j in xrange(len(bb_data.dtype.names)):
 
                     temp_list.append(str(bb_data[i][j]))
 
-                # Fill the columns "Closest_Variable_Source","Separation","Obsid","PSF","Relative Separation"
+                # Fill the columns "Closest_Variable_Source","Separation","Obsid","PSF","PSFfrac"
                 # with appropriate info
 
                 temp_list.append(src_name)
                 temp_list.append(str(src_sepn))
                 temp_list.append(str(src_obsid))
                 temp_list.append(str(psf_size))
-                temp_list.append(str(float(src_sepn)/float(psf_size)))
+                temp_list.append(str(psf_frac))
 
                 line = " ".join(temp_list)
 
