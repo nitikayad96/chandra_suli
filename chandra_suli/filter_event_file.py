@@ -21,6 +21,16 @@ import glob
 
 from chandra_suli import find_files
 
+
+def is_variable(tsv_file, name_of_the_source):
+
+    # open the file
+
+    # fix the case for one line
+
+    pass
+
+
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Filter known sources out of event file')
@@ -79,6 +89,30 @@ if __name__=="__main__":
 
         cmd_line = "fcollen '%s' Y 1" % temp_file
         subprocess.check_call(cmd_line, shell=True)
+
+        # Adjust the size of the ellipse, if this source is variable
+
+        # Get the name of the source
+        # Filenames are absolute paths like
+        # /home/giacomov/science/chandra_transients/catalog/region_files/635/CXOJ162659.0-243557/[filename]
+        # so the second-last element is the name of the source
+
+        source_name = os.path.split(region_file)[-2]
+
+        ##########################
+        # Crossmatch with tsv file
+        ##########################
+
+        if is_variable():
+
+            # open the file with "mode='update'"
+
+            with pyfits.open(region_file, mode='update'):
+
+                pass
+
+            # adjust the size of both axis by a factor (another argument)
+
 
         temp_files.append(temp_file)
 
