@@ -17,6 +17,7 @@ import subprocess
 import os
 import sys
 import astropy.io.fits as pyfits
+import numpy as np
 import glob
 
 from chandra_suli import find_files
@@ -24,21 +25,35 @@ from chandra_suli import find_files
 
 def is_variable(tsv_file, name_of_the_source):
 
-    # open the file
+    # Read data from tsv file
+    tsv_data = np.array(np.recfromtxt(tsv_file, delimiter='\t', skip_header=11,names=True), ndmin=1)
 
-    # fix the case for one line
+    # Make sure data is vectorized
+    if len(tsv_data.shape) == 0:
 
-    pass
+        tsv_data = np.array([tsv_data])
+
+    tsv_names = tsv_data['name'].tolist()
+
+    # Find index of source in question
+    idx = tsv_names.index(name_of_the_source)
+
+    # See if associated var_flag is True (some are strings with spaces, some are bools)
+    if str(tsv_data['var_flag'][idx]) == "TRUE" or str(tsv_data['var_flag'][idx]) == " TRUE":
+
+        return True
 
 
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Filter known sources out of event file')
 
-    parser.add_argument('--evtfile',help="Name of the event file", type=str, required=True)
+    parser.add_argument('--evtfile', help="Name of the event file", type=str, required=True)
 
     parser.add_argument('--region_dir', help="Directory containing the regions file for this obsid",
                         type=str, required=True)
+
+    parser.add_argument('--tsvfile', help="Name of TSV file", type=str, required=True)
 
     parser.add_argument('--outfile', help="Name of the output (filtered) event file", type=str, required=True)
 
@@ -47,6 +62,10 @@ if __name__=="__main__":
     parser.add_argument("--emin",help="Minimum energy (eV)",type=int,required=True)
 
     parser.add_argument("--emax",help="Maximum energy (eV)",type=int,required=True)
+
+    parser.add_argument("--adj_factor",
+                        help="If region files need to be adjusted, what factor to increase axes of ellipses by",
+                        type=float, required=True)
 
 
     # assumption = all level 3 region files and event file are already downloaded into same directory
@@ -97,19 +116,20 @@ if __name__=="__main__":
         # /home/giacomov/science/chandra_transients/catalog/region_files/635/CXOJ162659.0-243557/[filename]
         # so the second-last element is the name of the source
 
-        source_name = os.path.split(region_file)[-2]
+        source_name = os.path.basename(os.path.split(region_file)[-2])
+        source_name = source_name[0:3]+" "+source_name[3::]
 
         ##########################
         # Crossmatch with tsv file
         ##########################
 
-        if is_variable():
+        if is_variable(args.tsvfile, source_name) == True:
 
             # open the file with "mode='update'"
 
-            with pyfits.open(region_file, mode='update'):
+            with pyfits.open(temp_file, mode='update', memmap=False) as reg:
 
-                pass
+                reg['SRCREG'].data.R = args.adj_factor * reg['SRCREG'].data.R
 
             # adjust the size of both axis by a factor (another argument)
 
