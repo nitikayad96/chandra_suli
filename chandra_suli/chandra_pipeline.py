@@ -22,6 +22,10 @@ if __name__=="__main__":
     parser.add_argument('-r', '--region_repo', help="Path to the repository of region files",
                         type=str, required=True)
 
+    parser.add_argument('-a',"--adj_factor",
+                        help="If region files need to be adjusted, what factor to increase axes of ellipses by",
+                        type=float, required=True)
+
     parser.add_argument("-c", "--ncpus", help="Number of CPUs to use (default=1)",
                         type=int, default=1, required=False)
 
@@ -74,11 +78,9 @@ if __name__=="__main__":
 
     region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
 
-    cmd_line = "filter_event_file.py --evtfile %s --region_dir %s --outfile %s --emin %d --emax %d" %(evtfile,
-                                                                                                      region_dir,
-                                                                                                      filtered_evtfile,
-                                                                                                      args.emin,
-                                                                                                      args.emax)
+    cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
+               "--adj_factor %s"\
+               %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
 
     runner.run(cmd_line)
 
