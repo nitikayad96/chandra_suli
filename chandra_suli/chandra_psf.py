@@ -25,3 +25,8 @@ class ChandraPSF(object):
         return psf_size
 
     # returns PSF in arcsec
+
+    def get_psf_fraction(self, angle_in_arcmin, distance_in_arcsec, energy_in_kev=1.5, phi=0.0):
+
+        return psf.psfFrac(self._pdata, energy_in_kev, angle_in_arcmin, phi, distance_in_arcsec)
+
