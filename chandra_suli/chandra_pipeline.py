@@ -104,16 +104,25 @@ if __name__=="__main__":
 
     ccd_bb_files = find_files.find_files('.','ccd*%s*txt'%args.obsid)
 
+    # Check for hot pixels
     # Check for closest variable source across any observation
 
-    for ccd_bb_file in ccd_bb_files:
+    for i in xrange(len(ccd_bb_files)):
 
-        og_file = os.path.basename(ccd_bb_file)
+        og_file = os.path.basename(ccd_bb_files[i])
+
+        ccd_bb_file = ccd_bb_files[i]
+        ccd_file = ccd_files[i]
+
+        check_hp_file = "check_hp_%s" &og_file
+
+        cmd_line = "check_hot_pixel.py --evtfile %s --bbfile %s --outfile %s" \
+                   %(ccd_file, ccd_bb_file, check_hp_file)
 
         check_var_file = "check_var_%s" %og_file
 
         cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
-                   %(ccd_bb_file,check_var_file, evtfile)
+                   %(check_hp_file,check_var_file, evtfile)
 
         runner.run(cmd_line)
 
