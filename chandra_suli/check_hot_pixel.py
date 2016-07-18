@@ -59,7 +59,7 @@ if __name__=="__main__":
 
             # isolate region of event within times given
             temp_file_hp = "__check_hotpix.fits"
-            cmd_line = "dmcopy \"%s[sky=circle(%sd,%sd,10'') && time=%s:%s]\" %s" \
+            cmd_line = "dmcopy \"%s[sky=circle(%sd,%sd,15'') && time=%s:%s]\" %s" \
                        %(args.evtfile, ra, dec, tstart, tstop, temp_file_hp)
 
             runner.run(cmd_line)
