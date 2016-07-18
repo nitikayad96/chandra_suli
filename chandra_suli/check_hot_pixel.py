@@ -57,6 +57,7 @@ if __name__=="__main__":
             tstart = bb_data['Tstart'][i]
             tstop = bb_data['Tstop'][i]
 
+            # isolate region of event within times given
             temp_file_hp = "__check_hotpix.fits"
             cmd_line = "dmcopy \"%s[sky=circle(%sd,%sd,10'') && time=%s:%s]\" %s" \
                        %(args.evtfile, ra, dec, tstart, tstop, temp_file_hp)
@@ -65,6 +66,7 @@ if __name__=="__main__":
 
             hotpix_flag = False
 
+            # If all events happening in same coordinate, flag as hot pixel
             with pyfits.open(temp_file_hp, memmap=False) as hotpix:
 
                 chipx = hotpix['EVENTS'].data.chipx
