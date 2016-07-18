@@ -105,7 +105,7 @@ if __name__=="__main__":
         # xtdac uses as output file the name of the input file, without the extension,
         # plus "_res.txt"
 
-        root_name = os.path.splitext(ccd_file)
+        root_name = os.path.splitext(ccd_file)[0]
 
         output_file = '%s_res.txt' %root_name
 
