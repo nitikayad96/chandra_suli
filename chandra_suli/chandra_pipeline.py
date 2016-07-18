@@ -119,6 +119,8 @@ if __name__=="__main__":
         cmd_line = "check_hot_pixel.py --evtfile %s --bbfile %s --outfile %s" \
                    %(ccd_file, ccd_bb_file, check_hp_file)
 
+        runner.run(cmd_line)
+
         check_var_file = "check_var_%s" %og_file
 
         cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
