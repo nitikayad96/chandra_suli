@@ -93,6 +93,7 @@ if __name__=="__main__":
     ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
 
     # Run Bayesian Blocks algorithm
+    ccd_bb_files = []
 
     for ccd_file in ccd_files:
 
@@ -101,8 +102,21 @@ if __name__=="__main__":
 
         runner.run(cmd_line)
 
+        # xtdac uses as output file the name of the input file, without the extension,
+        # plus "_res.txt"
 
-    ccd_bb_files = find_files.find_files('.','ccd*%s*txt'%args.obsid)
+        root_name = os.path.splitext(ccd_file)
+
+        output_file = '%s_res.txt' % root_name
+
+        if os.path.exists(output_file):
+
+            ccd_bb_files.append(output_file)
+
+        else:
+
+            raise RuntimeError("xtdac.py failed and didn't produce any output file (looking for %s)" % output_file)
+
 
     # Check for hot pixels
     # Check for closest variable source across any observation
