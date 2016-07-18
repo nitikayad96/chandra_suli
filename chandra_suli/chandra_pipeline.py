@@ -107,7 +107,7 @@ if __name__=="__main__":
 
         root_name = os.path.splitext(ccd_file)
 
-        output_file = '%s_res.txt' % root_name
+        output_file = '%s_res.txt' %root_name
 
         if os.path.exists(output_file):
 
