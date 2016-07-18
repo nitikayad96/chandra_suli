@@ -114,7 +114,7 @@ if __name__=="__main__":
         ccd_bb_file = ccd_bb_files[i]
         ccd_file = ccd_files[i]
 
-        check_hp_file = "check_hp_%s" &og_file
+        check_hp_file = "check_hp_%s" %og_file
 
         cmd_line = "check_hot_pixel.py --evtfile %s --bbfile %s --outfile %s" \
                    %(ccd_file, ccd_bb_file, check_hp_file)
