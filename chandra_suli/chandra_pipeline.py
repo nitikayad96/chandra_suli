@@ -44,12 +44,21 @@ if __name__=="__main__":
                         default=5.0,
                         required=False)
 
+    parser.add_argument("-w", "--writeRegionFiles",
+                        help="Write a ds9 region file for each region with excesses?",
+                        type=str,
+                        default='yes',
+                        required=False,
+                        choices=['yes', 'no'])
+
+    parser.add_argument("-v", "--verbosity", help="Info or debug", type=str, required=False, default='info',
+                        choices=['info', 'debug'])
+
     parser.add_argument("-e1","--emin",help="Minimum energy (eV)",type=int,required=True)
 
     parser.add_argument("-e2","--emax",help="Maximum energy (eV)",type=int,required=True)
 
-    parser.add_argument("-v", "--verbosity", help="Info or debug", type=str, required=False, default='info',
-                        choices=['info', 'debug'])
+
 
     args = parser.parse_args()
 
@@ -97,8 +106,9 @@ if __name__=="__main__":
 
     for ccd_file in ccd_files:
 
-        cmd_line = "xtdac.py -e %s -x %s -w no -c %s -p %s -s %s -v %s" \
-                   %(ccd_file, expfile, args.ncpus, args.typeIerror, args.sigmaThreshold, args.verbosity)
+        cmd_line = "xtdac.py -e %s -x %s -w %s -c %s -p %s -s %s -v %s" \
+                   %(ccd_file, expfile, args.writeRegionFiles, args.ncpus, args.typeIerror,
+                     args.sigmaThreshold, args.verbosity)
 
         runner.run(cmd_line)
 
