@@ -103,6 +103,10 @@ if __name__=="__main__":
                 csi = db.core_sample_indices_
                 c = db.components_
 
+                if args.debug == "yes":
+                    print coords
+                    print l
+
                 # Run this if more than one cluster found
                 if len(np.unique(l)) > 1:
 
@@ -139,17 +143,21 @@ if __name__=="__main__":
 
                         # Check if coordinates are all the same and adjust hot_pix_flag accordingly
 
-                        if npxl > 1 and npyl > 1:
-                            hot_pix_flags.append(False)
+                        if npxl == 1 and npyl == 1:
+                            hot_pix_flags.append(True)
 
                         else:
-                            hot_pix_flags.append(True)
+                            hot_pix_flags.append(False)
 
                     # If every label is flagged as a hot pixel, flag transient as hot pixel
                     hot_pix_flags = np.array(hot_pix_flags)
                     flags = np.unique(hot_pix_flags)
                     if len(flags) == 1 and flags[0] == True:
                         hot_pix_flag = True
+
+                    if args.debug == "yes":
+                        print hot_pix_flags
+                        print hot_pix_flag
 
                 else:
                     x = []
@@ -163,6 +171,9 @@ if __name__=="__main__":
 
                     if npxl == 1 and npyl == 1:
                         hot_pix_flag = True
+
+                    if args.debug == "yes":
+                        print hot_pix_flag
 
             # Write to outfile
 
