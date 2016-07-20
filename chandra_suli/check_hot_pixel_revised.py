@@ -9,7 +9,6 @@ import os
 import sys
 import numpy as np
 import astropy.io.fits as pyfits
-from natsort import natsorted
 from sklearn.cluster import DBSCAN
 
 from chandra_suli import find_files
@@ -51,7 +50,11 @@ if __name__=="__main__":
 
     # make sure files are sorted
 
-    reg_files_sorted = natsorted(reg_files)
+    def extract_number(s):
+        return os.path.splitext(s)[0].split("_")[-1]
+
+
+    reg_files_sorted = sorted(reg_files, key=extract_number)
 
     with open(args.outfile, "w") as f:
 
