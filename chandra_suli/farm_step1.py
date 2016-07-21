@@ -47,7 +47,6 @@ if __name__=="__main__":
 
     evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0])
     tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0])
-    expfile = os.path.basename(find_files.find_files(os.getcwd(),"*%s*exp3.fits.gz" %args.obsid)[0])
 
     filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
