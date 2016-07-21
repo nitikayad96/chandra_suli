@@ -98,7 +98,7 @@ if __name__=="__main__":
                     coords.append(temp)
 
                 # Run DBSCAN
-                db = DBSCAN(eps=2, min_samples=3).fit(coords)
+                db = DBSCAN(eps=2, min_samples=2).fit(coords)
                 l = db.labels_
                 csi = db.core_sample_indices_
                 c = db.components_
@@ -110,13 +110,24 @@ if __name__=="__main__":
                 # Run this if more than one cluster found
                 if len(np.unique(l)) > 1:
 
+                    labels_unique = np.unique(l)
+
+                    if args.debug == "yes":
+                        print labels_unique
+
+                    if labels_unique[0] == -1:
+                        labels_unique = labels_unique[1::]
+
+                    if args.debug == "yes":
+                        print labels_unique
+
                     hot_pix_flags = []
                     org_data_idx = []
 
                     # Create a list of indices corresponding to each label
                     # [[indices of items in cluster 0],[indices of items in cluster 1],...]
 
-                    for i in np.unique(l):
+                    for i in labels_unique:
 
                         temp = []
                         for a, b in enumerate(l):
@@ -158,6 +169,8 @@ if __name__=="__main__":
                     if args.debug == "yes":
                         print hot_pix_flags
                         print hot_pix_flag
+
+                # If only one cluster is found
 
                 else:
                     x = []
