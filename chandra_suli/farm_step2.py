@@ -14,7 +14,7 @@ from chandra_suli.run_command import CommandRunner
 
 if __name__=="__main__":
 
-    parser = argparse.ArgumentParser(description='Download event files and exposure map from the Chandra catalog')
+    parser = argparse.ArgumentParser(description='Run Bayesian Block algorithm')
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
 
