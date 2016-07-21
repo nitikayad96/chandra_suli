@@ -9,13 +9,12 @@ import os
 import sys
 import numpy as np
 import astropy.io.fits as pyfits
+from sklearn.metrics.pairwise import euclidean_distances
 from sklearn.cluster import DBSCAN
 
 from chandra_suli import find_files
 from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
-
-
 
 if __name__=="__main__":
 
@@ -55,6 +54,32 @@ if __name__=="__main__":
 
 
     reg_files_sorted = sorted(reg_files, key=extract_number)
+
+
+    def neighbor_pixel_check(cluster_coords):
+
+        hot_pix_flag = True
+
+        all_distances = euclidean_distances(cluster_coords, cluster_coords)
+        if args.debug == "yes":
+            print all_distances
+
+        for distances in all_distances:
+
+            for distance in distances:
+
+                if distance < 2:
+                    pass
+
+                else:
+                    hot_pix_flag = False
+                    break
+
+            if hot_pix_flag == False:
+                break
+
+        return hot_pix_flag
+
 
     with open(args.outfile, "w") as f:
 
@@ -141,10 +166,17 @@ if __name__=="__main__":
                     for i in range(len(org_data_idx)):
                         x = []
                         y = []
+                        cluster_coords = []
 
                         for idx in org_data_idx[i]:
+
+                            cluster_coords.append(coords[idx])
                             x.append(coords[idx][0])
                             y.append(coords[idx][1])
+
+                        if args.debug == "yes":
+
+                            print cluster_coords
 
                         npx = np.array(x)
                         npy = np.array(y)
@@ -157,12 +189,18 @@ if __name__=="__main__":
                         if npxl == 1 and npyl == 1:
                             hot_pix_flags.append(True)
 
+                        # If not, check for neighboring coordinates
                         else:
-                            hot_pix_flags.append(False)
+
+                            hot_pix_flag = neighbor_pixel_check(cluster_coords)
+
+                            hot_pix_flags.append(hot_pix_flag)
 
                     # If every label is flagged as a hot pixel, flag transient as hot pixel
                     hot_pix_flags = np.array(hot_pix_flags)
+
                     flags = np.unique(hot_pix_flags)
+
                     if len(flags) == 1 and flags[0] == True:
                         hot_pix_flag = True
 
@@ -176,14 +214,22 @@ if __name__=="__main__":
                     x = []
                     y = []
                     for i in range(len(coords)):
+
                         x.append(coords[i][0])
                         y.append(coords[i][1])
 
                     npxl = len(np.unique(np.array(x)))
                     npyl = len(np.unique(np.array(y)))
 
+                    # Check that all coordinates in cluster are the same
                     if npxl == 1 and npyl == 1:
                         hot_pix_flag = True
+
+                    # If all coordinates are not same, check for neighboring pixels
+
+                    if hot_pix_flag == False:
+
+                        hot_pix_flag = neighbor_pixel_check(coords)
 
                     if args.debug == "yes":
                         print hot_pix_flag
