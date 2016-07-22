@@ -98,6 +98,7 @@ if __name__=="__main__":
 
         runner.run(cmd_line)
 
+        ccd_files = find_files.find_files('.', 'ccd*%s*fits' % args.obsid)
 
         # Run Bayesian Blocks algorithm
 
