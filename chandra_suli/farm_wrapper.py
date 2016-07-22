@@ -210,9 +210,7 @@ if __name__ == "__main__":
     else:
 
         # Stage-out
-
-        import pdb;pdb.set_trace()
-
+        
         print("\n\nStage out\n\n")
 
         with work_within_directory(workdir):
