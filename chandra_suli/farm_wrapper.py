@@ -9,7 +9,7 @@ import traceback
 import sys
 
 from chandra_suli.work_within_directory import work_within_directory
-
+from chandra_suli.sanitize_filename import sanitize_filename
 
 def clean_up(this_workdir):
 
@@ -29,10 +29,6 @@ def clean_up(this_workdir):
     else:
 
         print("Clean up completed.")
-
-def sanitize_filename(filename):
-
-    return os.path.abspath(os.path.expandvars(os.path.expanduser(filename)))
 
 
 def copy_directory(data_dir, workdir):
@@ -210,7 +206,7 @@ if __name__ == "__main__":
     else:
 
         # Stage-out
-        
+
         print("\n\nStage out\n\n")
 
         with work_within_directory(workdir):
