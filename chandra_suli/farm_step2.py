@@ -71,42 +71,40 @@ if __name__=="__main__":
 
         raise IOError("Directory not found for obsid %s" %args.obsid)
 
-    with work_within_directory(str(args.obsid)):
+    # Find filtered ccd files to input to xtdac
+    ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
 
-        # Find filtered ccd files to input to xtdac
-        ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
+    evtfile = find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0]
+    tsvfile = find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0]
+    expfile = find_files.find_files(os.getcwd(), "*%s*exp3.fits.gz" % args.obsid)[0]
 
-        evtfile = find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0]
-        tsvfile = find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0]
-        expfile = find_files.find_files(os.getcwd(), "*%s*exp3.fits.gz" % args.obsid)[0]
+    filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
-        filtered_evtfile = "%d_filtered.fits" %(args.obsid)
+    # Figure out the path for the regions files for this obsid
 
-        # Figure out the path for the regions files for this obsid
+    region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
 
-        region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
+    cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
+               "--adj_factor %s"\
+               %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
 
-        cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
-                   "--adj_factor %s"\
-                   %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
+    runner.run(cmd_line)
+
+    # Separate CCDs
+
+    cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
+
+    runner.run(cmd_line)
+
+    ccd_files = find_files.find_files('.', 'ccd*%s*fits' % args.obsid)
+
+    # Run Bayesian Blocks algorithm
+
+    for ccd_file in ccd_files:
+
+        cmd_line = "xtdac.py -e %s -x %s -w yes -c %s -p %s -s %s -m %s -v %s --transient_pos" \
+                   %(ccd_file, expfile, args.ncpus, args.typeIerror,
+                     args.sigmaThreshold, args.multiplicity, args.verbosity)
 
         runner.run(cmd_line)
-
-        # Separate CCDs
-
-        cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
-
-        runner.run(cmd_line)
-
-        ccd_files = find_files.find_files('.', 'ccd*%s*fits' % args.obsid)
-
-        # Run Bayesian Blocks algorithm
-
-        for ccd_file in ccd_files:
-
-            cmd_line = "xtdac.py -e %s -x %s -w yes -c %s -p %s -s %s -m %s -v %s" \
-                       %(ccd_file, expfile, args.ncpus, args.typeIerror,
-                         args.sigmaThreshold, args.multiplicity, args.verbosity)
-
-            runner.run(cmd_line)
 
