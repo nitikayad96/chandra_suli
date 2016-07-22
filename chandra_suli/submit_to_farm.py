@@ -102,7 +102,7 @@ if __name__=="__main__":
         # Generate the command line
 
         log_path = os.path.abspath('logs')
-        out_path = os.path.abspath('generated_data')
+        out_path = os.path.abspath('results')
 
         # Find executable
         exe_path = which('farm_wrapper.py')
