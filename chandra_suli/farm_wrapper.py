@@ -178,7 +178,7 @@ if __name__ == "__main__":
             # Remove from the directory name the obsid, so that /dev/shm/1241/regions/616 becomes
             # /dev/shm/1241/regions
 
-            local_reg_repo = os.path.sep.join(os.path.split(data_dir)[:-1])
+            local_reg_repo = os.path.sep.join(os.path.split(local_reg_dir)[:-1])
 
             cmd_line = "farm_step2.py --obsid %s --region_repo %s --adj_factor %s " \
                        "--emin %s --emax %s --ncpus %s --typeIerror %s --sigmaThreshold %s " \
