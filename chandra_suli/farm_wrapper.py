@@ -154,7 +154,9 @@ if __name__ == "__main__":
 
             # Copy in the input files
 
-            data_dir = os.path.join(indir, str(args.obsid))
+            os.makedirs('data')
+
+            data_dir = os.path.join(indir, 'data')
 
             ########
             # Copy input dir
@@ -166,9 +168,11 @@ if __name__ == "__main__":
             # Copy region repository
             ######
 
-            reg_dir = os.path.join(regdir, str(args.obsid))
+            os.makedirs('regions')
 
-            local_reg_dir = copy_directory(reg_dir, workdir)
+            reg_dir = os.path.join(regdir, 'regions')
+
+            local_reg_dir = copy_directory(reg_dir, 'regions')
 
             cmd_line = "farm_step2.py --obsid %s --region_repo %s --adj_factor %s " \
                        "--emin %s --emax %s --ncpus %s --typeIerror %s --sigmaThreshold %s " \
