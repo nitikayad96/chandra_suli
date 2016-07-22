@@ -20,7 +20,7 @@ if __name__=="__main__":
                                                  'and separate by CCD')
 
     parser.add_argument("-w", "--workdir", help="Directory for all the output (output files will be in a directory "
-                                                "named after the obsid)", type=int, required=True)
+                                                "named after the obsid)", type=str, required=True)
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
 
@@ -65,15 +65,15 @@ if __name__=="__main__":
             raise RuntimeError("\n\n\nCould not find one of the downloaded files for obsid %s. Exiting..." % args.obsid)
 
         # Create directory named after obsid
-        if not os.path.exists(args.obsid):
+        if not os.path.exists(str(args.obsid)):
 
-            os.mkdir(args.obsid)
+            os.mkdir(str(args.obsid))
 
         # Move files in there
 
-        os.rename(evtfile, os.path.join(args.obsid, evtfile))
-        os.rename(tsvfile, os.path.join(args.obsid, tsvfile))
-        os.rename(expmap, os.path.join(args.obsid, expmap))
+        os.rename(evtfile, os.path.join(str(args.obsid), evtfile))
+        os.rename(tsvfile, os.path.join(str(args.obsid), tsvfile))
+        os.rename(expmap, os.path.join(str(args.obsid), expmap))
 
         # filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
