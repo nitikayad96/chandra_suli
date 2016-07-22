@@ -111,7 +111,7 @@ if __name__=="__main__":
         def get_cmd_line(this_obsid):
 
             options = '--indir %s --regdir %s --outdir %s -o %s -a %s -e1 %s -e2 %s ' \
-                      '-p %s -s %s -m %s -c %s' % (args.indir, args.regdir, out_path, args.obsid, args.adj_factor,
+                      '-p %s -s %s -m %s -c %s' % (args.indir, args.regdir, out_path, this_obsid, args.adj_factor,
                                                    args.emin, args.emax, args.typeIerror, args.sigmaThreshold,
                                                    args.multiplicity, args.ncpus)
 
@@ -121,9 +121,7 @@ if __name__=="__main__":
             return cmd_line
 
         for obsid in args.obsid:
-
-            import pdb;pdb.set_trace()
-
+            
             this_cmd_line = get_cmd_line(obsid)
 
             print(this_cmd_line)
