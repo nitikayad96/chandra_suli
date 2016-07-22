@@ -5,6 +5,8 @@ import glob
 import os
 import shutil
 import subprocess
+import traceback
+import sys
 
 from chandra_suli.work_within_directory import work_within_directory
 
@@ -143,6 +145,8 @@ if __name__ == "__main__":
         # This will be executed if no exception is raised
         print("Successfully created %s" % (workdir))
 
+    cmd_line = "didn't even reach the command line execution"
+
     try:
 
         # now you have to go there
@@ -181,6 +185,10 @@ if __name__ == "__main__":
             subprocess.check_call(cmd_line, shell=True)
 
     except:
+
+        traceback.print_exc()
+
+        print(sys.exc_info())
 
         print("Cannot execute command: %s" % cmd_line)
         print("Maybe this will help:")
