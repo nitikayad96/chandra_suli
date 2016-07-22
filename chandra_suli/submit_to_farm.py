@@ -108,7 +108,7 @@ if __name__=="__main__":
         exe_path = which('farm_wrapper.py')
 
 
-        def get_cmd_line(obsid):
+        def get_cmd_line(this_obsid):
 
             options = '--indir %s --regdir %s --outdir %s -o %s -a %s -e1 %s -e2 %s ' \
                       '-p %s -s %s -m %s -c %s' % (args.indir, args.regdir, out_path, args.obsid, args.adj_factor,
@@ -116,7 +116,7 @@ if __name__=="__main__":
                                                    args.multiplicity, args.ncpus)
 
             cmd_line = "qsub -l vmem=10gb -o %s/%s.out -e %s/%s.err -V " \
-                       "-F '%s' %s " %(log_path, obsid, log_path, obsid, options, exe_path)
+                       "-F '%s' %s " %(log_path, this_obsid, log_path, this_obsid, options, exe_path)
 
             return cmd_line
 
