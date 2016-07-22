@@ -11,12 +11,16 @@ import os
 from chandra_suli import find_files
 from chandra_suli import logging_system
 from chandra_suli.run_command import CommandRunner
+from chandra_suli.work_within_directory import work_within_directory
 
 
 if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Run following steps: download files by obsid, filter the event file, '
                                                  'and separate by CCD')
+
+    parser.add_argument("-w", "--workdir", help="Directory for all the output (output files will be in a directory "
+                                                "named after the obsid)", type=int, required=True)
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
 
@@ -39,31 +43,54 @@ if __name__=="__main__":
     # Get the command runner
     runner = CommandRunner(logger)
 
-    # Download files
+    # Sanitize the workdir
+    workdir = os.path.abspath(os.path.expandvars(os.path.expanduser(args.workdir)))
 
-    cmd_line = "download_by_obsid.py --obsid %d" %args.obsid
+    with work_within_directory(workdir):
 
-    runner.run(cmd_line)
+        # Download files
 
-    evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0])
-    tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0])
+        cmd_line = "download_by_obsid.py --obsid %d" %args.obsid
 
-    filtered_evtfile = "%d_filtered.fits" %(args.obsid)
+        runner.run(cmd_line)
 
-    # Filter regions
+        try:
 
-    # Figure out the path for the regions files for this obsid
+            evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0])
+            tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0])
+            expmap = os.path.basename(find_files.find_files(os.getcwd(),"*%s*exp3.fits*" %args.obsid)[0])
 
-    region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
+        except IndexError:
 
-    cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
-               "--adj_factor %s"\
-               %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
+            raise RuntimeError("\n\n\nCould not find one of the downloaded files for obsid %s. Exiting..." % args.obsid)
 
-    runner.run(cmd_line)
+        # Create directory named after obsid
+        if not os.path.exists(args.obsid):
 
-    # Separate CCDs
+            os.mkdir(args.obsid)
 
-    cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
+        # Move files in there
 
-    runner.run(cmd_line)
+        os.rename(evtfile, os.path.join(args.obsid, evtfile))
+        os.rename(tsvfile, os.path.join(args.obsid, tsvfile))
+        os.rename(expmap, os.path.join(args.obsid, expmap))
+
+        # filtered_evtfile = "%d_filtered.fits" %(args.obsid)
+
+        # # Filter regions
+        #
+        # # Figure out the path for the regions files for this obsid
+        #
+        # region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
+        #
+        # cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
+        #            "--adj_factor %s"\
+        #            %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
+        #
+        # runner.run(cmd_line)
+        #
+        # # Separate CCDs
+        #
+        # cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
+        #
+        # runner.run(cmd_line)
