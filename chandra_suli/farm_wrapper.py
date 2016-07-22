@@ -38,6 +38,7 @@ def sanitize_filename(filename):
 def copy_directory(data_dir, workdir):
 
     if data_dir[-1] == '/':
+
         data_dir = data_dir[:-1]
 
     data_dir_basename = os.path.split(data_dir)[-1]
@@ -156,13 +157,13 @@ if __name__ == "__main__":
 
             os.makedirs('data')
 
-            data_dir = os.path.join(indir, 'data')
+            data_dir = os.path.join(indir, str(args.obsid))
 
             ########
             # Copy input dir
             ########
 
-            local_data_dir = copy_directory(data_dir, workdir)
+            local_data_dir = copy_directory(data_dir, os.path.join('data', str(args.obsid)))
 
             ######
             # Copy region repository
@@ -170,9 +171,9 @@ if __name__ == "__main__":
 
             os.makedirs('regions')
 
-            reg_dir = os.path.join(regdir, 'regions')
+            reg_dir = os.path.join(regdir, str(args.obsid))
 
-            local_reg_dir = copy_directory(reg_dir, 'regions')
+            local_reg_dir = copy_directory(reg_dir, os.path.join('regions', str(args.obsid)))
 
             cmd_line = "farm_step2.py --obsid %s --region_repo %s --adj_factor %s " \
                        "--emin %s --emax %s --ncpus %s --typeIerror %s --sigmaThreshold %s " \
