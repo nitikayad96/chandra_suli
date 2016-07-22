@@ -5,9 +5,11 @@ import glob
 import os
 import shutil
 import subprocess
+import traceback
+import sys
 
 from chandra_suli.work_within_directory import work_within_directory
-
+from chandra_suli.sanitize_filename import sanitize_filename
 
 def clean_up(this_workdir):
 
@@ -28,14 +30,11 @@ def clean_up(this_workdir):
 
         print("Clean up completed.")
 
-def sanitize_filename(filename):
-
-    return os.path.abspath(os.path.expandvars(os.path.expanduser(filename)))
-
 
 def copy_directory(data_dir, workdir):
 
     if data_dir[-1] == '/':
+
         data_dir = data_dir[:-1]
 
     data_dir_basename = os.path.split(data_dir)[-1]
@@ -143,6 +142,8 @@ if __name__ == "__main__":
         # This will be executed if no exception is raised
         print("Successfully created %s" % (workdir))
 
+    cmd_line = "didn't even reach the command line execution"
+
     try:
 
         # now you have to go there
@@ -162,13 +163,20 @@ if __name__ == "__main__":
             # Copy region repository
             ######
 
+            os.makedirs('regions')
+
             reg_dir = os.path.join(regdir, str(args.obsid))
 
-            local_reg_dir = copy_directory(reg_dir, workdir)
+            local_reg_dir = copy_directory(reg_dir, 'regions')
+
+            # Remove from the directory name the obsid, so that /dev/shm/1241/regions/616 becomes
+            # /dev/shm/1241/regions
+
+            local_reg_repo = os.path.sep.join(os.path.split(local_reg_dir)[:-1])
 
             cmd_line = "farm_step2.py --obsid %s --region_repo %s --adj_factor %s " \
                        "--emin %s --emax %s --ncpus %s --typeIerror %s --sigmaThreshold %s " \
-                       "--multiplicity %s --verbosity %s" % (args.obsid, local_reg_dir, args.adj_factor,
+                       "--multiplicity %s --verbosity %s" % (args.obsid, local_reg_repo, args.adj_factor,
                                                              args.emin, args.emax, args.ncpus,
                                                              args.typeIerror, args.sigmaThreshold, args.multiplicity,
                                                              args.verbosity)
@@ -181,6 +189,10 @@ if __name__ == "__main__":
             subprocess.check_call(cmd_line, shell=True)
 
     except:
+
+        traceback.print_exc()
+
+        print(sys.exc_info())
 
         print("Cannot execute command: %s" % cmd_line)
         print("Maybe this will help:")
