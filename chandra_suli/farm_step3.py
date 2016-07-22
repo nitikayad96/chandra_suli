@@ -11,6 +11,7 @@ import sys
 from chandra_suli import find_files
 from chandra_suli import logging_system
 from chandra_suli.run_command import CommandRunner
+from chandra_suli.work_within_directory import work_within_directory
 
 if __name__=="__main__":
 
@@ -27,32 +28,38 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
-    ccd_files = sorted(ccd_files)
+    if not os.path.exists(str(args.obsid)):
 
-    ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %args.obsid)
-    ccd_bb_files = sorted(ccd_bb_files)
+        raise IOError("Directory not found for obsid %s" %args.obsid)
 
-    evtfile = find_files.find_files('.','*%s*evt3.fits' %args.obsid)[0]
+    with work_within_directory(str(args.obsid)):
+
+        ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
+        ccd_files = sorted(ccd_files)
+
+        ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %args.obsid)
+        ccd_bb_files = sorted(ccd_bb_files)
+
+        evtfile = find_files.find_files('.','*%s*evt3.fits' %args.obsid)[0]
 
 
-    for i in xrange(len(ccd_bb_files)):
+        for i in xrange(len(ccd_bb_files)):
 
-        og_file = os.path.basename(ccd_bb_files[i])
+            og_file = os.path.basename(ccd_bb_files[i])
 
-        ccd_bb_file = ccd_bb_files[i]
-        ccd_file = ccd_files[i]
+            ccd_bb_file = ccd_bb_files[i]
+            ccd_file = ccd_files[i]
 
-        check_hp_file = "check_hp_%s" %og_file
+            check_hp_file = "check_hp_%s" %og_file
 
-        cmd_line = "check_hot_pixel_revised.py --evtfile %s --bbfile %s --outfile %s --debug no" \
-                   %(ccd_file, ccd_bb_file, check_hp_file)
+            cmd_line = "check_hot_pixel_revised.py --evtfile %s --bbfile %s --outfile %s --debug no" \
+                       %(ccd_file, ccd_bb_file, check_hp_file)
 
-        runner.run(cmd_line)
+            runner.run(cmd_line)
 
-        check_var_file = "check_var_%s" %og_file
+            check_var_file = "check_var_%s" %og_file
 
-        cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
-                   %(check_hp_file,check_var_file, evtfile)
+            cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
+                       %(check_hp_file,check_var_file, evtfile)
 
-        runner.run(cmd_line)
+            runner.run(cmd_line)
