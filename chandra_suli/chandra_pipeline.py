@@ -99,7 +99,7 @@ if __name__=="__main__":
 
     for ccd_file in ccd_files:
 
-        cmd_line = "xtdac.py -e %s -x %s -w yes -c %s -p %s -s %s -v %s" \
+        cmd_line = "xtdac.py -e %s -x %s -w yes -c %s -p %s -s %s -v %s --transient_pos" \
                    %(ccd_file, expfile, args.ncpus, args.typeIerror,
                      args.sigmaThreshold, args.verbosity)
 
