@@ -122,6 +122,8 @@ if __name__=="__main__":
 
         for obsid in args.obsid:
 
+            import pdb;pdb.set_trace()
+
             this_cmd_line = get_cmd_line(obsid)
 
             print(this_cmd_line)
