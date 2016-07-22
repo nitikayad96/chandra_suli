@@ -22,7 +22,7 @@ if __name__=="__main__":
     parser.add_argument("-w", "--workdir", help="Directory for all the output (output files will be in a directory "
                                                 "named after the obsid)", type=str, required=True)
 
-    parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
+    parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = '+')
 
     args = parser.parse_args()
 
@@ -39,47 +39,30 @@ if __name__=="__main__":
 
         # Download files
 
-        cmd_line = "download_by_obsid.py --obsid %d" %args.obsid
+        for this_obsid in args.obsid:
 
-        runner.run(cmd_line)
+            cmd_line = "download_by_obsid.py --obsid %d" %this_obsid
 
-        try:
+            runner.run(cmd_line)
 
-            evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0])
-            tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0])
-            expmap = os.path.basename(find_files.find_files(os.getcwd(),"*%s*exp3.fits*" %args.obsid)[0])
+            try:
 
-        except IndexError:
+                evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %this_obsid)[0])
+                tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %this_obsid)[0])
+                expmap = os.path.basename(find_files.find_files(os.getcwd(),"*%s*exp3.fits*" %this_obsid)[0])
 
-            raise RuntimeError("\n\n\nCould not find one of the downloaded files for obsid %s. Exiting..." % args.obsid)
+            except IndexError:
 
-        # Create directory named after obsid
-        if not os.path.exists(str(args.obsid)):
+                raise RuntimeError("\n\n\nCould not find one of the downloaded files for obsid %s. Exiting..."
+                                   % this_obsid)
 
-            os.mkdir(str(args.obsid))
+            # Create directory named after obsid
+            if not os.path.exists(str(this_obsid)):
 
-        # Move files in there
+                os.mkdir(str(this_obsid))
 
-        os.rename(evtfile, os.path.join(str(args.obsid), evtfile))
-        os.rename(tsvfile, os.path.join(str(args.obsid), tsvfile))
-        os.rename(expmap, os.path.join(str(args.obsid), expmap))
+            # Move files in there
 
-        # filtered_evtfile = "%d_filtered.fits" %(args.obsid)
-
-        # # Filter regions
-        #
-        # # Figure out the path for the regions files for this obsid
-        #
-        # region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
-        #
-        # cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
-        #            "--adj_factor %s"\
-        #            %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
-        #
-        # runner.run(cmd_line)
-        #
-        # # Separate CCDs
-        #
-        # cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
-        #
-        # runner.run(cmd_line)
+            os.rename(evtfile, os.path.join(str(this_obsid), evtfile))
+            os.rename(tsvfile, os.path.join(str(this_obsid), tsvfile))
+            os.rename(expmap, os.path.join(str(this_obsid), expmap))
