@@ -115,13 +115,13 @@ if __name__=="__main__":
                                                    args.emin, args.emax, args.typeIerror, args.sigmaThreshold,
                                                    args.multiplicity, args.ncpus)
 
-            cmd_line = "qsub -l vmem=10gb -o %s/%s.out -e %s/%s.err -V " \
+            cmd_line = "qsub -l vmem=20gb,ppn=5 -o %s/%s.out -e %s/%s.err -V " \
                        "-F '%s' %s " %(log_path, this_obsid, log_path, this_obsid, options, exe_path)
 
             return cmd_line
 
         for obsid in args.obsid:
-            
+
             this_cmd_line = get_cmd_line(obsid)
 
             print(this_cmd_line)
