@@ -18,6 +18,17 @@ if __name__=="__main__":
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
 
+    parser.add_argument('-r', '--region_repo', help="Path to the repository of region files",
+                        type=str, required=True)
+
+    parser.add_argument('-a', "--adj_factor",
+                        help="If region files need to be adjusted, what factor to increase axes of ellipses by",
+                        type=float, required=True)
+
+    parser.add_argument("-e1", "--emin", help="Minimum energy (eV)", type=int, required=True)
+
+    parser.add_argument("-e2", "--emax", help="Maximum energy (eV)", type=int, required=True)
+
     parser.add_argument("-c", "--ncpus", help="Number of CPUs to use (default=1)",
                         type=int, default=1, required=False)
 
@@ -58,7 +69,28 @@ if __name__=="__main__":
     # Find filtered ccd files to input to xtdac
     ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
 
+    evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0])
+    tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0])
     expfile = os.path.basename(find_files.find_files(os.getcwd(), "*%s*exp3.fits.gz" % args.obsid)[0])
+
+    filtered_evtfile = "%d_filtered.fits" %(args.obsid)
+
+    # Figure out the path for the regions files for this obsid
+
+    region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
+
+    cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
+               "--adj_factor %s"\
+               %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
+
+    runner.run(cmd_line)
+
+    # Separate CCDs
+
+    cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
+
+    runner.run(cmd_line)
+
 
     # Run Bayesian Blocks algorithm
 
