@@ -24,17 +24,6 @@ if __name__=="__main__":
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
 
-    parser.add_argument('-r', '--region_repo', help="Path to the repository of region files",
-                        type=str, required=True)
-
-    parser.add_argument('-a',"--adj_factor",
-                        help="If region files need to be adjusted, what factor to increase axes of ellipses by",
-                        type=float, required=True)
-
-    parser.add_argument("-e1","--emin",help="Minimum energy (eV)",type=int,required=True)
-
-    parser.add_argument("-e2","--emax",help="Maximum energy (eV)",type=int,required=True)
-
     args = parser.parse_args()
 
     # Get the logger
