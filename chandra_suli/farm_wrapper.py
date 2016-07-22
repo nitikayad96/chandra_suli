@@ -155,15 +155,13 @@ if __name__ == "__main__":
 
             # Copy in the input files
 
-            os.makedirs('data')
-
             data_dir = os.path.join(indir, str(args.obsid))
 
             ########
             # Copy input dir
             ########
 
-            local_data_dir = copy_directory(data_dir, 'data')
+            local_data_dir = copy_directory(data_dir, workdir)
 
             ######
             # Copy region repository
