@@ -57,7 +57,7 @@ if __name__=="__main__":
                 check_hp_file = "check_hp_%s" %og_file
 
                 cmd_line = "check_hot_pixel_revised.py --obsid %s --evtfile %s --bbfile %s --outfile %s --debug no" \
-                           %(args.obsid, ccd_file, ccd_bb_file, check_hp_file)
+                           %(this_obsid, ccd_file, ccd_bb_file, check_hp_file)
 
                 runner.run(cmd_line)
 
