@@ -19,7 +19,6 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="Add filtered candidates to a masterlist of sources")
 
-    parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
     parser.add_argument("--bbfile",help="Input text file (already checked for hot pixels and variable sources",
                         required=True, type=str)
     parser.add_argument("--masterfile",help="Name of file containing master list of all potential transients",
