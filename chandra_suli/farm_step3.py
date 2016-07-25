@@ -56,8 +56,8 @@ if __name__=="__main__":
 
                 check_hp_file = "check_hp_%s" %og_file
 
-                cmd_line = "check_hot_pixel_revised.py --evtfile %s --bbfile %s --outfile %s --debug no" \
-                           %(ccd_file, ccd_bb_file, check_hp_file)
+                cmd_line = "check_hot_pixel_revised.py --obsid %s --evtfile %s --bbfile %s --outfile %s --debug no" \
+                           %(args.obsid, ccd_file, ccd_bb_file, check_hp_file)
 
                 runner.run(cmd_line)
 
@@ -70,8 +70,8 @@ if __name__=="__main__":
 
             check_var_files = find_files.find_files('.','check_var*%s*txt' %this_obsid)
 
-            for check_var_file in check_var_files:
+        for check_var_file in check_var_files:
 
-                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
+            cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
 
-                runner.run(cmd_line)
+            runner.run(cmd_line)
