@@ -18,7 +18,7 @@ if __name__=="__main__":
     parser = argparse.ArgumentParser(description='Check each candidate transient for hot pixels and '
                                                  'closest variable source')
 
-    parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
+    parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
 
     # Get the logger
     logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
@@ -28,38 +28,40 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    if not os.path.exists(str(args.obsid)):
+    for this_obsid in args.obsid:
 
-        raise IOError("Directory not found for obsid %s" %args.obsid)
+        if not os.path.exists(str(args.obsid)):
 
-    with work_within_directory(str(args.obsid)):
+            raise IOError("Directory not found for obsid %s" %args.obsid)
 
-        ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
-        ccd_files = sorted(ccd_files)
+        with work_within_directory(str(args.obsid)):
 
-        ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %args.obsid)
-        ccd_bb_files = sorted(ccd_bb_files)
+            ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
+            ccd_files = sorted(ccd_files)
 
-        evtfile = find_files.find_files('.','*%s*evt3.fits' %args.obsid)[0]
+            ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %args.obsid)
+            ccd_bb_files = sorted(ccd_bb_files)
+
+            evtfile = find_files.find_files('.','*%s*evt3.fits' %args.obsid)[0]
 
 
-        for i in xrange(len(ccd_bb_files)):
+            for i in xrange(len(ccd_bb_files)):
 
-            og_file = os.path.basename(ccd_bb_files[i])
+                og_file = os.path.basename(ccd_bb_files[i])
 
-            ccd_bb_file = ccd_bb_files[i]
-            ccd_file = ccd_files[i]
+                ccd_bb_file = ccd_bb_files[i]
+                ccd_file = ccd_files[i]
 
-            check_hp_file = "check_hp_%s" %og_file
+                check_hp_file = "check_hp_%s" %og_file
 
-            cmd_line = "check_hot_pixel_revised.py --evtfile %s --bbfile %s --outfile %s --debug no" \
-                       %(ccd_file, ccd_bb_file, check_hp_file)
+                cmd_line = "check_hot_pixel_revised.py --evtfile %s --bbfile %s --outfile %s --debug no" \
+                           %(ccd_file, ccd_bb_file, check_hp_file)
 
-            runner.run(cmd_line)
+                runner.run(cmd_line)
 
-            check_var_file = "check_var_%s" %og_file
+                check_var_file = "check_var_%s" %og_file
 
-            cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
-                       %(check_hp_file,check_var_file, evtfile)
-
-            runner.run(cmd_line)
+                cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
+                           %(check_hp_file,check_var_file, evtfile)
+    
+                runner.run(cmd_line)

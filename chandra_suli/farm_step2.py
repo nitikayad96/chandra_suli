@@ -17,7 +17,7 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description='Run Bayesian Block algorithm')
 
-    parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True)
+    parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs="+")
 
     parser.add_argument('-r', '--region_repo', help="Path to the repository of region files",
                         type=str, required=True)
@@ -67,44 +67,46 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    if not os.path.exists(str(args.obsid)):
+    for this_obsid in args.obsid:
 
-        raise IOError("Directory not found for obsid %s" %args.obsid)
+        if not os.path.exists(str(args.obsid)):
 
-    # Find filtered ccd files to input to xtdac
-    ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
+            raise IOError("Directory not found for obsid %s" %args.obsid)
 
-    evtfile = find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0]
-    tsvfile = find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0]
-    expfile = find_files.find_files(os.getcwd(), "*%s*exp3.fits.gz" % args.obsid)[0]
+        # Find filtered ccd files to input to xtdac
+        ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
 
-    filtered_evtfile = "%d_filtered.fits" %(args.obsid)
+        evtfile = find_files.find_files(os.getcwd(),'*%s*evt3.fits' %args.obsid)[0]
+        tsvfile = find_files.find_files(os.getcwd(),"%s.tsv" %args.obsid)[0]
+        expfile = find_files.find_files(os.getcwd(), "*%s*exp3.fits.gz" % args.obsid)[0]
 
-    # Figure out the path for the regions files for this obsid
+        filtered_evtfile = "%d_filtered.fits" %(args.obsid)
 
-    region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
+        # Figure out the path for the regions files for this obsid
 
-    cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
-               "--adj_factor %s"\
-               %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
+        region_dir = os.path.join(os.path.expandvars(os.path.expanduser(args.region_repo)), '%s' % args.obsid)
 
-    runner.run(cmd_line)
-
-    # Separate CCDs
-
-    cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
-
-    runner.run(cmd_line)
-
-    ccd_files = find_files.find_files('.', 'ccd*%s*fits' % args.obsid)
-
-    # Run Bayesian Blocks algorithm
-
-    for ccd_file in ccd_files:
-
-        cmd_line = "xtdac.py -e %s -x %s -w yes -c %s -p %s -s %s -m %s -v %s --transient_pos" \
-                   %(ccd_file, expfile, args.ncpus, args.typeIerror,
-                     args.sigmaThreshold, args.multiplicity, args.verbosity)
+        cmd_line = "filter_event_file.py --evtfile %s --tsvfile %s --region_dir %s --outfile %s --emin %d --emax %d " \
+                   "--adj_factor %s"\
+                   %(evtfile, tsvfile, region_dir, filtered_evtfile, args.emin, args.emax, args.adj_factor)
 
         runner.run(cmd_line)
+
+        # Separate CCDs
+
+        cmd_line = "separate_CCD.py --evtfile %s" %filtered_evtfile
+
+        runner.run(cmd_line)
+
+        ccd_files = find_files.find_files('.', 'ccd*%s*fits' % args.obsid)
+
+        # Run Bayesian Blocks algorithm
+
+        for ccd_file in ccd_files:
+
+            cmd_line = "xtdac.py -e %s -x %s -w yes -c %s -p %s -s %s -m %s -v %s --transient_pos" \
+                       %(ccd_file, expfile, args.ncpus, args.typeIerror,
+                         args.sigmaThreshold, args.multiplicity, args.verbosity)
+
+            runner.run(cmd_line)
 
