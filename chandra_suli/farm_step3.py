@@ -19,6 +19,8 @@ if __name__=="__main__":
                                                  'closest variable source')
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
+    parser.add_argument("-m","--masterfile",help="Name of file containing master list of all potential transients",
+                        required=True, type=str)
 
     # Get the logger
     logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
@@ -63,5 +65,13 @@ if __name__=="__main__":
 
                 cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
                            %(check_hp_file,check_var_file, evtfile)
+
+                runner.run(cmd_line)
+
+            check_var_files = find_files.find_files('.','check_var*%s*txt' %this_obsid)
+
+            for check_var_file in check_var_files:
+
+                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
 
                 runner.run(cmd_line)
