@@ -100,36 +100,42 @@ if __name__=="__main__":
         # Transform it to a python list from a numpy array
         master_data_new = master_data_og.tolist()
 
-        for i in range(bb_n):
+        existing_column_names = " ".join(master_data_og.dtype.names)
 
-            temp_list = []
+        with open(args.masterfile,"w") as f:
 
-            # Add candidate to master list if it's not a hot pixel
-            if bb_data['Hot_Pixel_Flag'][i] == False:
+            f.write("# %s\n" % existing_column_names)
 
-                temp_list = [0]
-                temp_list.extend(bb_data[i])
-                temp_list.extend("no")
+            for i in range(bb_n):
 
-                master_data_new.append(temp_list)
+                temp_list = []
 
-        # Sort new master list according to decreasing PSF fraction order
+                # Add candidate to master list if it's not a hot pixel
+                if bb_data['Hot_Pixel_Flag'][i] == False:
 
-        master_data_sorted = sorted(master_data_new, key=lambda data_row: data_row[-2], reverse=True)
+                    temp_list = [0]
+                    temp_list.extend(bb_data[i])
+                    temp_list.append("no")
 
-        # Write to file
-        for i in range(len(master_data_sorted)):
+                    master_data_new.append(temp_list)
 
-            temp_list = []
-            temp_list.append(str(i+1))
+            # Sort new master list according to decreasing PSF fraction order
 
-            for j in xrange(1,len(master_data_og.dtype.names)):
+            master_data_sorted = sorted(master_data_new, key=lambda data_row: data_row[-2], reverse=True)
 
-                temp_list.append(str(master_data_sorted[i][j]))
+            # Write to file
+            for i in range(len(master_data_sorted)):
 
-            line = " ".join(temp_list)
+                temp_list = []
+                temp_list.append(str(i+1))
 
-            f.write("%s\n" % line)
+                for j in xrange(1,len(master_data_og.dtype.names)):
+
+                    temp_list.append(str(master_data_sorted[i][j]))
+
+                line = " ".join(temp_list)
+
+                f.write("%s\n" % line)
 
 
 
