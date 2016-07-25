@@ -20,6 +20,7 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="Check to see if transient candidates are actually hot pixels")
 
+    parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True)
     parser.add_argument("--evtfile",help="Filtered CCD file",required=True)
     parser.add_argument("--bbfile", help="Text file for one CCD with transient candidates listed", required=True)
     parser.add_argument("--outfile",help="Name of output text file file",required=True)
@@ -49,12 +50,19 @@ if __name__=="__main__":
 
     # make sure files are sorted
 
+
     def extract_number(s):
         return os.path.splitext(s)[0].split("_")[-1]
 
 
     reg_files_sorted = sorted(reg_files, key=extract_number)
 
+    # Find CCD number based on file name
+
+    names = os.path.splitext(evt_file_name)[0].split("_")
+    idx = names.index("ccd")
+
+    ccd_num = names[idx + 1]
 
     def neighbor_pixel_check(cluster_coords):
 
@@ -86,7 +94,7 @@ if __name__=="__main__":
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# %s Hot_Pixel_Flag\n" % existing_column_names)
+        f.write("# Candidate Obsid CCD %s Hot_Pixel_Flag\n" % existing_column_names)
 
         for n, reg_file in enumerate(reg_files_sorted):
 
@@ -238,6 +246,9 @@ if __name__=="__main__":
 
             temp_list = []
 
+            temp_list.append(str(n+1))
+            temp_list.append(str(args.obsid))
+            temp_list.append(str(ccd_num))
 
             for j in range(len(bb_data.dtype.names)):
                 temp_list.append(str(bb_data[n][j]))
