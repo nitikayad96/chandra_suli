@@ -63,5 +63,5 @@ if __name__=="__main__":
 
                 cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
                            %(check_hp_file,check_var_file, evtfile)
-    
+
                 runner.run(cmd_line)
