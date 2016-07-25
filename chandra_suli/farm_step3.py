@@ -30,19 +30,19 @@ if __name__=="__main__":
 
     for this_obsid in args.obsid:
 
-        if not os.path.exists(str(args.obsid)):
+        if not os.path.exists(str(this_obsid)):
 
-            raise IOError("Directory not found for obsid %s" %args.obsid)
+            raise IOError("Directory not found for obsid %s" %this_obsid)
 
-        with work_within_directory(str(args.obsid)):
+        with work_within_directory(str(this_obsid)):
 
-            ccd_files = find_files.find_files('.','ccd*%s*fits'%args.obsid)
+            ccd_files = find_files.find_files('.','ccd*%s*fits'%this_obsid)
             ccd_files = sorted(ccd_files)
 
-            ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %args.obsid)
+            ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %this_obsid)
             ccd_bb_files = sorted(ccd_bb_files)
 
-            evtfile = find_files.find_files('.','*%s*evt3.fits' %args.obsid)[0]
+            evtfile = find_files.find_files('.','*%s*evt3.fits' %this_obsid)[0]
 
 
             for i in xrange(len(ccd_bb_files)):

@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
     # Arguments for farm_step2
 
-    parser.add_argument("-o", "--obsid", help="Observation ID Number", type=int, required=True)
+    parser.add_argument("-o", "--obsid", help="Observation ID Number", type=int, required=True, nargs="+")
 
     parser.add_argument('-a', "--adj_factor",
                         help="If region files need to be adjusted, what factor to increase axes of ellipses by",
@@ -144,89 +144,91 @@ if __name__ == "__main__":
 
     cmd_line = "didn't even reach the command line execution"
 
-    try:
+    for this_obsid in args.obsid:
 
-        # now you have to go there
-        with work_within_directory(workdir):
+        try:
 
-            # Copy in the input files
+            # now you have to go there
+            with work_within_directory(workdir):
 
-            data_dir = os.path.join(indir, str(args.obsid))
+                # Copy in the input files
 
-            ########
-            # Copy input dir
-            ########
+                data_dir = os.path.join(indir, str(this_obsid))
 
-            local_data_dir = copy_directory(data_dir, workdir)
+                ########
+                # Copy input dir
+                ########
 
-            ######
-            # Copy region repository
-            ######
+                local_data_dir = copy_directory(data_dir, workdir)
 
-            os.makedirs('regions')
+                ######
+                # Copy region repository
+                ######
 
-            reg_dir = os.path.join(regdir, str(args.obsid))
+                os.makedirs('regions')
 
-            local_reg_dir = copy_directory(reg_dir, 'regions')
+                reg_dir = os.path.join(regdir, str(this_obsid))
 
-            # Remove from the directory name the obsid, so that /dev/shm/1241/regions/616 becomes
-            # /dev/shm/1241/regions
+                local_reg_dir = copy_directory(reg_dir, 'regions')
 
-            local_reg_repo = os.path.sep.join(os.path.split(local_reg_dir)[:-1])
+                # Remove from the directory name the obsid, so that /dev/shm/1241/regions/616 becomes
+                # /dev/shm/1241/regions
 
-            cmd_line = "farm_step2.py --obsid %s --region_repo %s --adj_factor %s " \
-                       "--emin %s --emax %s --ncpus %s --typeIerror %s --sigmaThreshold %s " \
-                       "--multiplicity %s --verbosity %s" % (args.obsid, local_reg_repo, args.adj_factor,
-                                                             args.emin, args.emax, args.ncpus,
-                                                             args.typeIerror, args.sigmaThreshold, args.multiplicity,
-                                                             args.verbosity)
+                local_reg_repo = os.path.sep.join(os.path.split(local_reg_dir)[:-1])
 
-            # Do whathever
-            print("\n\nAbout to execute command:")
-            print(cmd_line)
-            print('\n')
+                cmd_line = "farm_step2.py --obsid %s --region_repo %s --adj_factor %s " \
+                           "--emin %s --emax %s --ncpus %s --typeIerror %s --sigmaThreshold %s " \
+                           "--multiplicity %s --verbosity %s" % (this_obsid, local_reg_repo, args.adj_factor,
+                                                                 args.emin, args.emax, args.ncpus,
+                                                                 args.typeIerror, args.sigmaThreshold, args.multiplicity,
+                                                                 args.verbosity)
 
-            subprocess.check_call(cmd_line, shell=True)
+                # Do whathever
+                print("\n\nAbout to execute command:")
+                print(cmd_line)
+                print('\n')
 
-    except:
+                subprocess.check_call(cmd_line, shell=True)
 
-        traceback.print_exc()
+        except:
 
-        print(sys.exc_info())
+            traceback.print_exc()
 
-        print("Cannot execute command: %s" % cmd_line)
-        print("Maybe this will help:")
-        print("\nContent of directory:\n")
+            print(sys.exc_info())
 
-        subprocess.check_call("ls", shell=True)
+            print("Cannot execute command: %s" % cmd_line)
+            print("Maybe this will help:")
+            print("\nContent of directory:\n")
 
-        print("\nFree space on disk:\n")
-        subprocess.check_call("df . -h", shell=True)
+            subprocess.check_call("ls", shell=True)
 
-    else:
+            print("\nFree space on disk:\n")
+            subprocess.check_call("df . -h", shell=True)
 
-        # Stage-out
+        else:
 
-        print("\n\nStage out\n\n")
+            # Stage-out
 
-        with work_within_directory(workdir):
+            print("\n\nStage out\n\n")
 
-            output_files = glob.glob("*candidate*.reg")
+            with work_within_directory(workdir):
 
-            output_files.extend(glob.glob("*_res.*"))
+                output_files = glob.glob("*candidate*.reg")
 
-            output_files.extend(glob.glob("*_filtered.fits"))
+                output_files.extend(glob.glob("*_res.*"))
 
-            for filename in output_files:
+                output_files.extend(glob.glob("*_filtered.fits"))
 
-                print("%s -> %s" % (filename, outdir))
+                for filename in output_files:
 
-                shutil.copy(os.path.join(workdir, filename), outdir)
+                    print("%s -> %s" % (filename, outdir))
 
-    finally:
+                    shutil.copy(os.path.join(workdir, filename), outdir)
 
-        # This is executed in any case, whether an exception have been raised or not
-        # I use this so we are sure we are not leaving trash behind even
-        # if this job fails
+        finally:
 
-        clean_up(workdir)
+            # This is executed in any case, whether an exception have been raised or not
+            # I use this so we are sure we are not leaving trash behind even
+            # if this job fails
+
+            clean_up(workdir)
