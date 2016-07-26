@@ -44,18 +44,14 @@ if __name__=="__main__":
             this_obsid_files = find_files.find_files(".","*_%s_*" %this_obsid)
             this_obsid_files.extend(find_files.find_files(".","%s_*" %this_obsid))
 
-            #print "Moving files for obsid %s" %this_obsid
-
             # move each file to the corresponding data folder
 
             for file_path in this_obsid_files:
 
                 new_path = os.path.join(args.data_path,str(this_obsid),os.path.basename(file_path))
-                print new_path
 
-                #os.rename(file_path,new_path)
+                os.rename(file_path,new_path)
 
-            #print "Move completed!"
 
 
 
