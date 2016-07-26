@@ -48,9 +48,12 @@ if __name__=="__main__":
 
             for file_path in this_obsid_files:
 
+                print file_path
                 new_path = os.path.join(args.data_path,str(this_obsid),os.path.basename(file_path))
+                print new_path
+                print "\n\n"
 
-                os.rename(file_path,new_path)
+                #os.rename(file_path,new_path)
 
 
 
