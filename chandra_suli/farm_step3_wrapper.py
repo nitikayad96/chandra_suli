@@ -52,7 +52,7 @@ if __name__=="__main__":
                 print file_path
                 new_path = os.path.join(args.data_path,str(this_obsid),os.path.basename(file_path))
                 print new_path
-                print type(new_path)
+                print os.path.abspath(new_path)
                 print "\n\n"
 
                 os.rename(file_path,new_path)
