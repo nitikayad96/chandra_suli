@@ -21,6 +21,8 @@ if __name__=="__main__":
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
     parser.add_argument("-m","--masterfile",help="Name of file containing master list of all potential transients",
                         required=True, type=str)
+    parser.add_argument("-d", "--indir", help="Path to directory containing data of all obsids", required = True,
+                        type=str)
 
     # Get the logger
     logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
@@ -30,48 +32,50 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    for this_obsid in args.obsid:
+    with work_within_directory(args.indir):
 
-        if not os.path.exists(str(this_obsid)):
+        for this_obsid in args.obsid:
 
-            raise IOError("Directory not found for obsid %s" %this_obsid)
+            if not os.path.exists(str(this_obsid)):
 
-        with work_within_directory(str(this_obsid)):
+                raise IOError("Directory not found for obsid %s" %this_obsid)
 
-            ccd_files = find_files.find_files('.','ccd*%s*fits'%this_obsid)
-            ccd_files = sorted(ccd_files)
+            with work_within_directory(str(this_obsid)):
 
-            ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %this_obsid)
-            ccd_bb_files = sorted(ccd_bb_files)
+                ccd_files = find_files.find_files('.','ccd*%s*fits'%this_obsid)
+                ccd_files = sorted(ccd_files)
 
-            evtfile = find_files.find_files('.','*%s*evt3.fits' %this_obsid)[0]
+                ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %this_obsid)
+                ccd_bb_files = sorted(ccd_bb_files)
+
+                evtfile = find_files.find_files('.','*%s*evt3.fits' %this_obsid)[0]
 
 
-            for i in xrange(len(ccd_bb_files)):
+                for i in xrange(len(ccd_bb_files)):
 
-                og_file = os.path.basename(ccd_bb_files[i])
+                    og_file = os.path.basename(ccd_bb_files[i])
 
-                ccd_bb_file = ccd_bb_files[i]
-                ccd_file = ccd_files[i]
+                    ccd_bb_file = ccd_bb_files[i]
+                    ccd_file = ccd_files[i]
 
-                check_hp_file = "check_hp_%s" %og_file
+                    check_hp_file = "check_hp_%s" %og_file
 
-                cmd_line = "check_hot_pixel_revised.py --obsid %s --evtfile %s --bbfile %s --outfile %s --debug no" \
-                           %(this_obsid, ccd_file, ccd_bb_file, check_hp_file)
+                    cmd_line = "check_hot_pixel_revised.py --obsid %s --evtfile %s --bbfile %s --outfile %s --debug no" \
+                               %(this_obsid, ccd_file, ccd_bb_file, check_hp_file)
+
+                    runner.run(cmd_line)
+
+                    check_var_file = "check_var_%s" %og_file
+
+                    cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
+                               %(check_hp_file,check_var_file, evtfile)
+
+                    runner.run(cmd_line)
+
+                check_var_files = find_files.find_files('.','check_var*%s*txt' %this_obsid)
+
+            for check_var_file in check_var_files:
+
+                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
 
                 runner.run(cmd_line)
-
-                check_var_file = "check_var_%s" %og_file
-
-                cmd_line = "check_variable_revised.py --bbfile %s --outfile %s --eventfile %s" \
-                           %(check_hp_file,check_var_file, evtfile)
-
-                runner.run(cmd_line)
-
-            check_var_files = find_files.find_files('.','check_var*%s*txt' %this_obsid)
-
-        for check_var_file in check_var_files:
-
-            cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
-
-            runner.run(cmd_line)
