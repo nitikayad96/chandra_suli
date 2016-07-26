@@ -52,7 +52,7 @@ if __name__=="__main__":
 
 
     def extract_number(s):
-        return os.path.splitext(s)[0].split("_")[-1]
+        return int(os.path.splitext(s)[0].split("_")[-1])
 
 
     reg_files_sorted = sorted(reg_files, key=extract_number)
