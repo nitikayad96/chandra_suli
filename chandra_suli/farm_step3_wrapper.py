@@ -10,7 +10,7 @@ import sys
 
 from chandra_suli import find_files
 from chandra_suli import logging_system
-from chandra_suli import sanitize_filename
+from chandra_suli.sanitize_filename import sanitize_filename
 from chandra_suli.run_command import CommandRunner
 from chandra_suli.work_within_directory import work_within_directory
 
