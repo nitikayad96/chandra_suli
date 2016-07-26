@@ -10,6 +10,7 @@ import sys
 
 from chandra_suli import find_files
 from chandra_suli import logging_system
+from chandra_suli import sanitize_filename
 from chandra_suli.run_command import CommandRunner
 from chandra_suli.work_within_directory import work_within_directory
 
@@ -53,7 +54,7 @@ if __name__=="__main__":
                 print new_path
                 print "\n\n"
 
-                os.rename(file_path,new_path)
+                os.rename(sanitize_filename(file_path),sanitize_filename(new_path))
 
 
 
