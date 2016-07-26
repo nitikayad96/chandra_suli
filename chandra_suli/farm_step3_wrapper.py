@@ -48,15 +48,12 @@ if __name__=="__main__":
 
             # move each file to the corresponding data folder
 
-            for file in this_obsid_files:
+            for file_path in this_obsid_files:
 
-                og_path = os.path.join(args.results_path,file)
-                print og_path
-
-                new_path = os.path.join(args.data_path,str(this_obsid),file)
+                new_path = os.path.join(args.data_path,str(this_obsid),os.path.basename(file_path))
                 print new_path
 
-                os.rename(og_path,new_path)
+                #os.rename(file_path,new_path)
 
             #print "Move completed!"
 
