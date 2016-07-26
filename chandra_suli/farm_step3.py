@@ -74,8 +74,8 @@ if __name__=="__main__":
 
                 check_var_files = find_files.find_files('.','check_var*%s*txt' %this_obsid)
 
-            for check_var_file in check_var_files:
+    for check_var_file in check_var_files:
 
-                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
+        cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
 
-                runner.run(cmd_line)
+        runner.run(cmd_line)

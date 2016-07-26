@@ -44,6 +44,8 @@ if __name__=="__main__":
             this_obsid_files = find_files.find_files(".","*_%s_*" %this_obsid)
             this_obsid_files.extend(find_files.find_files(".","%s_*" %this_obsid))
 
+            print this_obsid_files
+
             print "Moving files for obsid %s" %this_obsid
 
             # move each file to the corresponding data folder
