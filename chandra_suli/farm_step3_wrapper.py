@@ -54,7 +54,7 @@ if __name__=="__main__":
                 print new_path
                 print "\n\n"
 
-                os.rename(file_path,new_path)
+                os.rename(os.path.basename(file_path),new_path)
 
 
 
