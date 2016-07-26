@@ -34,11 +34,14 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    results_path = sanitize_filename(args.results_path)
+    data_path = sanitize_filename(args.data_path)
+
     for this_obsid in args.obsid:
 
         # Go to directory where results from farm_step2 are stored
 
-        with work_within_directory(args.results_path):
+        with work_within_directory(results_path):
 
             # Find files related to just this_obsid
 
@@ -47,15 +50,11 @@ if __name__=="__main__":
 
             # move each file to the corresponding data folder
 
-            for file_path in this_obsid_files:
+        for file_path in this_obsid_files:
 
-                print file_path
-                new_path = os.path.join(args.data_path,str(this_obsid),os.path.basename(file_path))
-                print new_path
-                print os.path.abspath(new_path)
-                print "\n\n"
+            new_path = os.path.join(data_path,str(this_obsid),os.path.basename(file_path))
 
-                os.rename(file_path,new_path)
+            os.rename(file_path,new_path)
 
 
 
