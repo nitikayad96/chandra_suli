@@ -54,7 +54,7 @@ if __name__=="__main__":
                 print new_path
                 print "\n\n"
 
-                os.rename(sanitize_filename(file_path),sanitize_filename(new_path))
+                os.rename(file_path,new_path)
 
 
 
