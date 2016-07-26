@@ -21,7 +21,7 @@ if __name__=="__main__":
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
     parser.add_argument("-m","--masterfile",help="Name of file containing master list of all potential transients",
                         required=True, type=str)
-    parser.add_argument("-d", "--indir", help="Path to directory containing data of all obsids", required = True,
+    parser.add_argument("-d", "--data_path", help="Path to directory containing data of all obsids", required = True,
                         type=str)
 
     # Get the logger
@@ -32,7 +32,7 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    with work_within_directory(args.indir):
+    with work_within_directory(args.data_path):
 
         for this_obsid in args.obsid:
 
