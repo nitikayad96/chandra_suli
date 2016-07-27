@@ -2,10 +2,15 @@
 Check for unique lists within an array
 """
 
-def unique_list(array):
+def unique_list(array, elements_to_check):
+    """
+
+    :param array: Array of lists to be checked
+    :param elements_to_check: range of numbers corresponding to indices of list
+    :return: new unique array
+    """
 
     n_rows = len(array)
-    n_elements = len(array[0])
 
     unique_array = []
 
@@ -25,7 +30,8 @@ def unique_list(array):
 
             # check if each element in rows are equal, breaking after finding even one unequal element
 
-            for k in range(n_elements):
+
+            for k in elements_to_check:
 
                 equal_element = True
 
