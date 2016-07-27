@@ -45,10 +45,11 @@ if __name__=="__main__":
 
         for this_obsid in args.obsid:
 
-            print regdir
-            print os.path.exists(regdir)
+            regdir_this_obsid = os.path.join(regdir,str(this_obsid))
+            print regdir_this_obsid
+            print os.path.exists(regdir_this_obsid)
 
-            if os.path.exists(regdir):
+            if os.path.exists(regdir_this_obsid):
 
                 cmd_line = "download_by_obsid.py --obsid %d" %this_obsid
 
