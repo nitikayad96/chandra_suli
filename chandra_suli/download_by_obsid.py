@@ -79,9 +79,11 @@ if __name__ == "__main__":
     asol_files = find_files.find_files(work_dir,'*asol*.fits.gz')
     pbk_files = find_files.find_files(work_dir,'*pbk*.fits.gz')
 
-    if len(evt3_files) > 1 or len(tsv_files) > 1 or len(exp_files) > 1 or len(asol_files) > 1 or len(pbk_files) > 1:
+
+    if len(evt3_files) > 1 or len(tsv_files) > 1 or len(exp_files) > 1 or len(pbk_files) > 1:
 
         raise RuntimeError("More than one event file in this tree. Did you clean up the directory before running "
+
                            "this script?")
 
     elif len(evt3_files)==0 or len(tsv_files)==0 or len(exp_files)==0 or len(asol_files)==0 or len(pbk_files)==0:
@@ -93,7 +95,7 @@ if __name__ == "__main__":
         evt3 = evt3_files[0]
         tsv = tsv_files[0]
         exp = exp_files[0]
-        asol = asol_files[0]
+        asol = ",".join(asol_files)
         pbk = pbk_files[0]
 
     # The r4_header_update script cannot run on a compressed fits file, so decompress the eventfile
