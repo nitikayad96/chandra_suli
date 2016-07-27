@@ -22,6 +22,9 @@ if __name__=="__main__":
     parser.add_argument("-w", "--workdir", help="Directory for all the output (output files will be in a directory "
                                                 "named after the obsid)", type=str, required=True)
 
+    parser.add_argument('-r', '--region_repo', help="Path to the repository of region files",
+                        type=str, required=True)
+
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = '+')
 
     args = parser.parse_args()
@@ -41,28 +44,36 @@ if __name__=="__main__":
 
         for this_obsid in args.obsid:
 
-            cmd_line = "download_by_obsid.py --obsid %d" %this_obsid
+            region_path = os.path.join(args.region_repo,this_obsid)
 
-            runner.run(cmd_line)
+            if os.path.exists(region_path):
 
-            try:
+                cmd_line = "download_by_obsid.py --obsid %d" %this_obsid
 
-                evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %this_obsid)[0])
-                tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %this_obsid)[0])
-                expmap = os.path.basename(find_files.find_files(os.getcwd(),"*%s*exp3.fits*" %this_obsid)[0])
+                runner.run(cmd_line)
 
-            except IndexError:
+                try:
 
-                raise RuntimeError("\n\n\nCould not find one of the downloaded files for obsid %s. Exiting..."
-                                   % this_obsid)
+                    evtfile = os.path.basename(find_files.find_files(os.getcwd(),'*%s*evt3.fits' %this_obsid)[0])
+                    tsvfile = os.path.basename(find_files.find_files(os.getcwd(),"%s.tsv" %this_obsid)[0])
+                    expmap = os.path.basename(find_files.find_files(os.getcwd(),"*%s*exp3.fits*" %this_obsid)[0])
 
-            # Create directory named after obsid
-            if not os.path.exists(str(this_obsid)):
+                except IndexError:
 
-                os.mkdir(str(this_obsid))
+                    raise RuntimeError("\n\n\nCould not find one of the downloaded files for obsid %s. Exiting..."
+                                       % this_obsid)
 
-            # Move files in there
+                # Create directory named after obsid
+                if not os.path.exists(str(this_obsid)):
 
-            os.rename(evtfile, os.path.join(str(this_obsid), evtfile))
-            os.rename(tsvfile, os.path.join(str(this_obsid), tsvfile))
-            os.rename(expmap, os.path.join(str(this_obsid), expmap))
+                    os.mkdir(str(this_obsid))
+
+                # Move files in there
+
+                os.rename(evtfile, os.path.join(str(this_obsid), evtfile))
+                os.rename(tsvfile, os.path.join(str(this_obsid), tsvfile))
+                os.rename(expmap, os.path.join(str(this_obsid), expmap))
+
+            else:
+
+                print "Region files do not exist for ObsID %s" %this_obsid
