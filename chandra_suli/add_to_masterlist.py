@@ -10,6 +10,7 @@ import argparse
 import sys
 import numpy as np
 
+from chandra_suli.unique_list import unique_list
 from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
 
@@ -122,15 +123,17 @@ if __name__=="__main__":
 
             master_data_sorted = sorted(master_data_new, key=lambda data_row: data_row[-2], reverse=True)
 
+            master_data_unique = unique_list(master_data_sorted,range(1,len(master_data_og.dtype.names)-1))
+
             # Write to file
-            for i in range(len(master_data_sorted)):
+            for i in range(len(master_data_unique)):
 
                 temp_list = []
                 temp_list.append(str(i+1))
 
                 for j in xrange(1,len(master_data_og.dtype.names)):
 
-                    temp_list.append(str(master_data_sorted[i][j]))
+                    temp_list.append(str(master_data_unique[i][j]))
 
                 line = " ".join(temp_list)
 
