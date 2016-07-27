@@ -37,6 +37,7 @@ if __name__=="__main__":
 
     # Sanitize the workdir
     workdir = os.path.abspath(os.path.expandvars(os.path.expanduser(args.workdir)))
+    regdir = os.path.abspath(os.path.expandvars(os.path.expanduser(args.region_repo)))
 
     with work_within_directory(workdir):
 
@@ -44,10 +45,10 @@ if __name__=="__main__":
 
         for this_obsid in args.obsid:
 
-            region_path = os.path.join(args.region_repo,str(this_obsid))
-            print region_path
+            print regdir
+            print os.path.exists(regdir)
 
-            if os.path.exists(region_path):
+            if os.path.exists(regdir):
 
                 cmd_line = "download_by_obsid.py --obsid %d" %this_obsid
 
