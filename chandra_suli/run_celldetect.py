@@ -54,12 +54,19 @@ if __name__=="__main__":
         regfile = find_files.find_files(obsid_dir, 'ccd_%s_%s_filtered_candidate_%s.reg' %(ccd,obsid,candidate))[0]
 
         regfile_name = os.path.splitext(os.path.basename(regfile))[0]
-        outfile = "%s_celldetect.fits" %regfile_name
-        outfile_path = os.path.join(args.outdir,outfile)
+        newreg = "%s_reg.fits" %regfile_name
+        newreg_path = os.path.join(args.outdir,newreg)
 
         cmd_line = 'ftcopy \"%s[regfilter(\'%s\') && (TIME >= %s) && (TIME <= %s)]\" %s clobber=yes '\
-                   %(evtfile, regfile, tstart, tstop, outfile_path)
+                   %(evtfile, regfile, tstart, tstop, newreg_path)
 
         runner.run(cmd_line)
+
+        celldetect_file = '%s_celldetect.fits' %regfile_name
+        celldetect_path = os.path.join(args.outdir, celldetect_file)
+
+        cmd_line = 'celldetect %s %s clobber=yes' %(newreg_path, celldetect_path)
+        runner.run(cmd_line)
+
 
 
