@@ -46,8 +46,6 @@ if __name__=="__main__":
         for this_obsid in args.obsid:
 
             regdir_this_obsid = os.path.join(regdir,str(this_obsid))
-            print regdir_this_obsid
-            print os.path.exists(regdir_this_obsid)
 
             if os.path.exists(regdir_this_obsid):
 
