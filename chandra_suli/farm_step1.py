@@ -44,7 +44,7 @@ if __name__=="__main__":
 
         for this_obsid in args.obsid:
 
-            region_path = os.path.join(args.region_repo,this_obsid)
+            region_path = os.path.join(args.region_repo,str(this_obsid))
 
             if os.path.exists(region_path):
 
