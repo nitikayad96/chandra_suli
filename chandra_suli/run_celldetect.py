@@ -18,7 +18,7 @@ if __name__=="__main__":
 
     parser = argparse.ArgumentParser(description="Check to see if transient candidates are actually hot pixels")
 
-    parser.add_argument("--masterfile",help="Name of file containing master list of all potential transients",
+    parser.add_argument("--masterfile",help="Name of file containing list of transients in this set",
                         required=True, type=str)
     parser.add_argument("--ranks",help="Ranks in file that you want to run",nargs="+",required=True,type=int)
     parser.add_argument("--data_dir", help="Path to directory containing data of all obsids", required=True,
