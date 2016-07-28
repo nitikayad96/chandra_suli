@@ -119,7 +119,11 @@ if __name__=="__main__":
                 chipx = reg['EVENTS'].data.chipx
                 chipy = reg['EVENTS'].data.chipy
 
-            if len(chipx)<15:
+            if len(chipx) == 0:
+
+                print "\n\n%s had no events between %s and %s!\n\n"%(reg_file,tstart,tstop)
+
+            elif len(chipx)<15:
 
                 # Organize into list of coordinate pairs
                 coords = []
