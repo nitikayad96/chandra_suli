@@ -22,7 +22,7 @@ if __name__=="__main__":
 
     parser.add_argument("--bbfile",help="Input text file (already checked for hot pixels and variable sources",
                         required=True, type=str)
-    parser.add_argument("--masterfile",help="Name of file containing master list of all potential transients",
+    parser.add_argument("--masterfile",help="Path to file containing list of transients in this set",
                         required=True, type=str)
 
 

@@ -19,7 +19,7 @@ if __name__=="__main__":
                                                  'closest variable source')
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
-    parser.add_argument("-m","--masterfile",help="Name of file containing master list of all potential transients",
+    parser.add_argument("-m","--masterfile",help="Path to file containing list of transients in this set",
                         required=True, type=str)
     parser.add_argument("-d", "--data_path", help="Path to directory containing data of all obsids", required = True,
                         type=str)
