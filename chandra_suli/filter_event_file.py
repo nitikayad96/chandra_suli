@@ -151,7 +151,7 @@ if __name__=="__main__":
 
     print("Merging region files...")
 
-    all_regions_file = '__all_regions.fits'
+    all_regions_file = 'all_regions.fits'
 
     cmd_line = 'dmmerge @%s %s clobber=yes mode=h' % (regions_list_file, all_regions_file)
 
