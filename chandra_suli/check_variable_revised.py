@@ -85,7 +85,7 @@ if __name__=="__main__":
                 temp_list.append(str(0))
                 temp_list.append(str(theta))
                 temp_list.append(str(psf_size))
-                temp_list.append(str(0))
+                temp_list.append(str(1))
 
                 line = " ".join(temp_list)
 
@@ -149,7 +149,7 @@ if __name__=="__main__":
                     temp_list.append(str(0))
                     temp_list.append(str(theta))
                     temp_list.append(str(psf_size))
-                    temp_list.append(str(0))
+                    temp_list.append(str(1))
 
                     line = " ".join(temp_list)
 

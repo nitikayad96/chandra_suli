@@ -74,7 +74,9 @@ if __name__=="__main__":
 
             # Write all sources to text file
 
-            for i in range(len(master_data_sorted)):
+            i = 0
+
+            while i < len(master_data_sorted) and master_data_sorted[i][-1] > 0.9:
 
                 temp_list = []
 
@@ -90,6 +92,8 @@ if __name__=="__main__":
                 line = " ".join(temp_list)
 
                 f.write("%s\n" % line)
+
+                i += 1
 
 
     else:
