@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
                 ext = f['SRCREG']
 
-            with pyfits.open(evtfile, memmap=False) as f:
+            with pyfits.open(evtfile, mode='append', memmap=False) as f:
 
                 f.append(ext)
 
