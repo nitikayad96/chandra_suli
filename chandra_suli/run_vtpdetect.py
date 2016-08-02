@@ -77,7 +77,7 @@ if __name__ == "__main__":
             # run this to create filtered exposure map to match filtered event file to use during vtpdetect
 
             cmd_line = "xtcheesemask.py -i %s -r %s -o %s -s 1 --no-reverse" \
-                       %(expfile, all_regions_file, expfile_new)
+                       %(expfile, filtered_evtfile, expfile_new)
 
             runner.run(cmd_line)
 
