@@ -58,7 +58,6 @@ if __name__ == "__main__":
         obsid_dir = os.path.join(data_dir,str(obsid))
 
         all_regions_file = find_files.find_files(obsid_dir, '%s_all_regions.fits' %(obsid))[0]
-        filtered_evtfile = find_files.find_files(obsid_dir, '%s_filtered.fits' %obsid)[0]
         evtfile = find_files.find_files(obsid_dir, 'ccd_%s_%s_filtered.fits' %(ccd,obsid))[0]
         expfile = find_files.find_files(obsid_dir, '*%s*exp3*' %obsid)[0]
 
@@ -70,14 +69,14 @@ if __name__ == "__main__":
 
                 ext = f['SRCREG']
 
-            with pyfits.open(filtered_evtfile, memmap=False) as f:
+            with pyfits.open(evtfile, memmap=False) as f:
 
                 f.append(ext)
 
             # run this to create filtered exposure map to match filtered event file to use during vtpdetect
 
             cmd_line = "xtcheesemask.py -i %s -r %s -o %s -s 1 --no-reverse" \
-                       %(expfile, filtered_evtfile, expfile_new)
+                       %(expfile, evtfile, expfile_new)
 
             runner.run(cmd_line)
 
