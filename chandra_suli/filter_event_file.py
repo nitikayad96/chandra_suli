@@ -74,6 +74,8 @@ if __name__=="__main__":
 
     #creates text file with name of all level 3 region files for given Obs ID
 
+    obsid = os.path.split(args.region_dir)[-1]
+
     region_files = find_files.find_files(args.region_dir, "*reg3.fits.gz")
 
     n_reg = len(region_files)
@@ -151,7 +153,7 @@ if __name__=="__main__":
 
     print("Merging region files...")
 
-    all_regions_file = 'all_regions.fits'
+    all_regions_file = '%s_all_regions.fits' %(obsid)
 
     cmd_line = 'dmmerge @%s %s clobber=yes mode=h' % (regions_list_file, all_regions_file)
 
