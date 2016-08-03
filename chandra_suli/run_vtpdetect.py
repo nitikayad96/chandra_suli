@@ -45,7 +45,7 @@ if __name__ == "__main__":
 
     # Get data from master list
     master_data = np.array(np.recfromtxt(masterfile, names=True), ndmin=1)
-    vtpdetect_data = master_data.tolist()
+    vtpdetect_data = []
 
     for i in range(len(master_data)):
 
