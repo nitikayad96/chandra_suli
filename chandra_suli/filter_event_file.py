@@ -78,7 +78,7 @@ if __name__=="__main__":
 
     if len(obsid) == 0:
 
-        obsid = ps.path.basename(os.path.split(args.region_dir)[0])
+        obsid = os.path.basename(os.path.split(args.region_dir)[0])
 
     region_files = find_files.find_files(args.region_dir, "*reg3.fits.gz")
 
