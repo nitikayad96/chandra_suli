@@ -157,7 +157,7 @@ if __name__ == "__main__":
 
             for j in range(1,len(master_data.dtype.names)+1):
 
-                temp_list.append(str(vtpdetect_data[i][j]))
+                temp_list.append(str(vtpdetect_data_unique[i][j]))
 
             line = " ".join(temp_list)
 
