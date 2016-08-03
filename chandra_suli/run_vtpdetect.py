@@ -169,15 +169,31 @@ if __name__ == "__main__":
                     os.remove(vtpdetect_file)
                     os.remove(evtfile_new)
 
+    vtpdetect_data_unique = unique_list(vtpdetect_data, range(1, len(master_data.dtype.names)))
+
+    if os.path.exists(args.outfile):
+
+        current_data = np.array(np.recfromtxt(args.outfile, names=True), ndmin=1)
+
+        current_data.tolist()
+
+        for i in range(len(vtpdetect_data_unique)):
+
+            current_data.append(vtpdetect_data_unique[i])
+
+    else:
+
+        current_data = vtpdetect_data_unique
+
+
     with open(args.outfile, "w") as k:
 
         existing_column_names = " ".join(master_data.dtype.names)
 
         k.write("# %s Significance\n" % existing_column_names)
 
-        vtpdetect_data_unique = unique_list(vtpdetect_data, range(1, len(master_data.dtype.names)))
 
-        for i in range(len(vtpdetect_data_unique)):
+        for i in range(len(current_data)):
 
             temp_list = []
 
@@ -185,7 +201,7 @@ if __name__ == "__main__":
 
             for j in range(1,len(master_data.dtype.names)+1):
 
-                temp_list.append(str(vtpdetect_data_unique[i][j]))
+                temp_list.append(str(current_data[i][j]))
 
             line = " ".join(temp_list)
 
