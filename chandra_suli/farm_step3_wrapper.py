@@ -20,8 +20,8 @@ if __name__=="__main__":
                                                  'closest variable source')
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
-    parser.add_argument("-m","--masterfile",help="Path to file containing list of transients in this set",
-                        required=True, type=str)
+    parser.add_argument("-f", "--outfile", help="Name of output file which will contain filtered list of transients",
+                        required=True)
     parser.add_argument("-d1", "--results_path", help="Path to directory containing results from farm_step_2")
     parser.add_argument("-d2", "--data_path", help="Path to directory containing data of all obsids", required = True,
                         type=str)
@@ -56,11 +56,8 @@ if __name__=="__main__":
 
             os.rename(file_path,new_path)
 
-
-
-
-        cmd_line = "farm_step3.py --obsid %s --masterfile %s --data_path %s" \
-                   %(this_obsid, args.masterfile, args.data_path)
+        cmd_line = "farm_step3.py --obsid %s --outfile %s --data_path %s" \
+                   %(this_obsid, args.outfile, args.data_path)
 
         runner.run(cmd_line)
 
