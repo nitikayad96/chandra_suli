@@ -23,6 +23,8 @@ if __name__=="__main__":
                         required=True, type=str)
     parser.add_argument("-d", "--data_path", help="Path to directory containing data of all obsids", required = True,
                         type=str)
+    parser.add_argument("-f", "--outfile", help="Name of output file which will contain filtered list of transients",
+                        required=True)
 
     # Get the logger
     logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
@@ -79,3 +81,8 @@ if __name__=="__main__":
                 cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
 
                 runner.run(cmd_line)
+
+            cmd_line = "run_vtpdetect.py --masterfile %s --outfile %s --data_dir %s --outdir ." \
+                       %(args.masterfile, args.outfile, args.data_path)
+
+            runner.run(cmd_line)
