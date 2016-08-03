@@ -85,8 +85,8 @@ if __name__=="__main__":
 
             outdir = os.path.join(os.getcwd(), str(this_obsid))
 
-            cmd_line = "run_vtpdetect.py --masterfile %s --outfile %s --data_dir %s --outdir ." \
-                       %(temp_masterfile, args.outfile, args.data_path)
+            cmd_line = "run_vtpdetect.py --masterfile %s --outfile %s --data_dir %s --outdir %s" \
+                       %(temp_masterfile, args.outfile, args.data_path, outdir)
 
             runner.run(cmd_line)
 
