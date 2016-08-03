@@ -58,7 +58,7 @@ if __name__=="__main__":
 
         with open(args.masterfile,"w") as f:
 
-            f.write("# Rank %s Checked\n" % existing_column_names)
+            f.write("# Rank %s\n" % existing_column_names)
 
             # Only consider candidates that aren't marked as hot pixels
 
@@ -86,8 +86,6 @@ if __name__=="__main__":
 
                     temp_list.append(str(master_data_sorted[i][j]))
 
-                # Mark all sources as unchecked initially. When you go through and run wavdetect, manually change to yes
-                temp_list.append("no")
 
                 line = " ".join(temp_list)
 
@@ -119,7 +117,7 @@ if __name__=="__main__":
 
                     temp_list = [0]
                     temp_list.extend(bb_data[i])
-                    temp_list.append("no")
+
 
                     master_data_new.append(temp_list)
 
@@ -127,7 +125,7 @@ if __name__=="__main__":
 
             master_data_sorted = sorted(master_data_new, key=lambda data_row: data_row[-2], reverse=True)
 
-            master_data_unique = unique_list(master_data_sorted,range(1,len(master_data_og.dtype.names)-1))
+            master_data_unique = unique_list(master_data_sorted,range(1,len(master_data_og.dtype.names)))
 
             # Write to file
             for i in range(len(master_data_unique)):

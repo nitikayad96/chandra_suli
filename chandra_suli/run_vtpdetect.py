@@ -11,6 +11,7 @@ import astropy.io.fits as pyfits
 from astropy.coordinates import SkyCoord
 import numpy as np
 
+from chandra_suli.unique_list import unique_list
 from chandra_suli.sanitize_filename import sanitize_filename
 from chandra_suli import find_files
 from chandra_suli.run_command import CommandRunner
@@ -65,13 +66,13 @@ if __name__ == "__main__":
 
         if not os.path.exists(expfile_new):
 
-            with pyfits.open(all_regions_file, memmap=False) as f:
+            with pyfits.open(evtfile, memmap=False) as f:
 
-                ext = f['SRCREG']
+                if len(f) < 4:
 
-            with pyfits.open(evtfile, mode='append', memmap=False) as f:
+                    cmd_line = "fappend %s[1] %s" %(all_regions_file, evtfile)
+                    runner.run(cmd_line)
 
-                f.append(ext)
 
             # run this to create filtered exposure map to match filtered event file to use during vtpdetect
 
@@ -91,17 +92,18 @@ if __name__ == "__main__":
 
         # run vtpdetect
 
-        vtpdetect_file = os.path.join(outdir,'ccd_%s_%s_filtered_candidate_%s_vtpdetect.reg' %(ccd,obsid,candidate))
+        vtpdetect_file = os.path.join(outdir,'ccd_%s_%s_filtered_candidate_%s_vtpdetect.fits' %(ccd,obsid,candidate))
 
-        cmd_line = 'vtpdetect %s expfile=%s outfile=%s ellsigma=1 clobber=yes' %(evtfile_new, expfile_new, vtpdetect_file)
+        cmd_line = 'vtpdetect %s expfile=%s outfile=%s ellsigma=1 limit=1e-5 coarse=3 maxiter=10 scale=1 clobber=yes' \
+                   %(evtfile_new, expfile_new, vtpdetect_file)
 
         runner.run(cmd_line)
 
         # Check contents of file
 
-        with pyfits.open(vtpdetect_file,memmap=False) as f:
+        with pyfits.open(vtpdetect_file,memmap=False) as h:
 
-            regions = f['SRCLIST'].data
+            regions = h['SRCLIST'].data
 
             # further analysis if not empty
 
@@ -113,11 +115,13 @@ if __name__ == "__main__":
                 for j in xrange(len(regions)):
 
                     radius = max(regions['R'][j])
-                    ra_reg = regions['RA'][j]
-                    dec_rec = regions['DEC'][j]
 
-                    p1 = SkyCoord(ra,dec, unit = "arcsec")
-                    p2 = SkyCoord(ra_reg, dec_rec, unit = "arcsec")
+
+                    ra_reg = regions['RA'][j]
+                    dec_reg = regions['DEC'][j]
+
+                    p1 = SkyCoord(ra,dec, unit = "deg")
+                    p2 = SkyCoord(ra_reg, dec_reg, unit = "deg")
 
                     sep = p2.separation(p1).arcsec
 
@@ -128,36 +132,38 @@ if __name__ == "__main__":
                         fsp = regions['FSP'][j]
 
                         temp_list.extend(master_data[i])
-                        temp_list.extend(fsp)
+                        temp_list.append(float(fsp))
 
                         vtpdetect_data.append(temp_list)
+
+                        print temp_list
 
             else:
 
                 os.remove(vtpdetect_file)
                 os.remove(evtfile_new)
 
-
-    with open(args.outfile, "w") as f:
+    with open(args.outfile, "w") as k:
 
         existing_column_names = " ".join(master_data.dtype.names)
 
-        f.write("# %s Significance\n" % existing_column_names)
+        k.write("# %s Significance\n" % existing_column_names)
 
+        vtpdetect_data_unique = unique_list(vtpdetect_data, range(1, len(master_data.dtype.names)))
 
-        for n,i in enumerate(range(len(vtpdetect_data))):
+        for n,i in enumerate(range(len(vtpdetect_data_unique))):
 
             temp_list = []
 
             temp_list.append(str(n+1))
 
-            for j in range(1,len(master_data.dtype.names)):
+            for j in range(1,len(master_data.dtype.names)+1):
 
                 temp_list.append(str(vtpdetect_data[i][j]))
 
             line = " ".join(temp_list)
 
-            f.write("%s\n" % line)
+            k.write("%s\n" % line)
 
 
 
