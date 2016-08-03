@@ -19,8 +19,6 @@ if __name__=="__main__":
                                                  'closest variable source')
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
-    parser.add_argument("-m","--masterfile",help="Path to file containing list of transients in this set",
-                        required=True, type=str)
     parser.add_argument("-d", "--data_path", help="Path to directory containing data of all obsids", required = True,
                         type=str)
     parser.add_argument("-f", "--outfile", help="Name of output file which will contain filtered list of transients",
@@ -76,13 +74,17 @@ if __name__=="__main__":
 
                 check_var_files = find_files.find_files('.','check_var*%s*txt' %this_obsid)
 
+            temp_masterfile = '__temp_masterfile.txt'
+
             for check_var_file in check_var_files:
 
-                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.masterfile)
+                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, temp_masterfile)
 
                 runner.run(cmd_line)
 
             cmd_line = "run_vtpdetect.py --masterfile %s --outfile %s --data_dir %s --outdir ." \
-                       %(args.masterfile, args.outfile, args.data_path)
+                       %(temp_masterfile, args.outfile, args.data_path)
 
             runner.run(cmd_line)
+
+            os.remove(temp_masterfile)
