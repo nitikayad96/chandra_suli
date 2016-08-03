@@ -136,8 +136,6 @@ if __name__ == "__main__":
 
                         vtpdetect_data.append(temp_list)
 
-                        print temp_list
-
             else:
 
                 os.remove(vtpdetect_file)
