@@ -92,54 +92,82 @@ if __name__ == "__main__":
 
         # run vtpdetect
 
-        vtpdetect_file = os.path.join(outdir,'ccd_%s_%s_filtered_candidate_%s_vtpdetect.fits' %(ccd,obsid,candidate))
+        with pyfits.open(evtfile_new) as q:
 
-        cmd_line = 'vtpdetect %s expfile=%s outfile=%s ellsigma=1 limit=1e-5 coarse=3 maxiter=10 scale=1 clobber=yes' \
-                   %(evtfile_new, expfile_new, vtpdetect_file)
+            chipx = q['EVENTS'].data.chipx
+            chipy = q['EVENTS'].data.chipy
 
-        runner.run(cmd_line)
+        coords = []
 
-        # Check contents of file
+        for n in range(len(chipx)):
 
-        with pyfits.open(vtpdetect_file,memmap=False) as h:
+            temp = []
+            temp.append(chipx[n])
+            temp.append(chipy[n])
 
-            regions = h['SRCLIST'].data
+            coords.append(temp)
 
-            # further analysis if not empty
+        if len(unique_list(coords)) < 10:
 
-            if len(regions) != 0:
+            print "\nWARNING: vtpdetect was not run because there were less than 10 unique coordinates\n"
 
-                # check that the source in question is related to that given by xtdac by checking to see if it's
-                # within a circle having a radius of the major axis of the region
+            temp_list = []
 
-                for j in xrange(len(regions)):
+            temp_list.extend(master_data[i])
+            temp_list.append(1e-99)
 
-                    radius = max(regions['R'][j])
+            vtpdetect_data.append(temp_list)
+
+        else:
+
+            vtpdetect_file = os.path.join(outdir,'ccd_%s_%s_filtered_candidate_%s_vtpdetect.fits' %(ccd,obsid,candidate))
+
+            cmd_line = 'vtpdetect %s expfile=%s outfile=%s ellsigma=1 limit=1e-5 coarse=3 maxiter=10 scale=1 clobber=yes' \
+                       %(evtfile_new, expfile_new, vtpdetect_file)
+
+            runner.run(cmd_line)
+
+            # Check contents of file
+
+            with pyfits.open(vtpdetect_file,memmap=False) as h:
+
+                regions = h['SRCLIST'].data
+
+                # further analysis if not empty
+
+                if len(regions) != 0:
+
+                    # check that the source in question is related to that given by xtdac by checking to see if it's
+                    # within a circle having a radius of the major axis of the region
+
+                    for j in xrange(len(regions)):
+
+                        radius = max(regions['R'][j])
 
 
-                    ra_reg = regions['RA'][j]
-                    dec_reg = regions['DEC'][j]
+                        ra_reg = regions['RA'][j]
+                        dec_reg = regions['DEC'][j]
 
-                    p1 = SkyCoord(ra,dec, unit = "deg")
-                    p2 = SkyCoord(ra_reg, dec_reg, unit = "deg")
+                        p1 = SkyCoord(ra,dec, unit = "deg")
+                        p2 = SkyCoord(ra_reg, dec_reg, unit = "deg")
 
-                    sep = p2.separation(p1).arcsec
+                        sep = p2.separation(p1).arcsec
 
-                    temp_list = []
+                        temp_list = []
 
-                    if sep <= 2 * radius:
+                        if sep <= 2 * radius:
 
-                        fsp = regions['FSP'][j]
+                            fsp = regions['FSP'][j]
 
-                        temp_list.extend(master_data[i])
-                        temp_list.append(float(fsp))
+                            temp_list.extend(master_data[i])
+                            temp_list.append(float(fsp))
 
-                        vtpdetect_data.append(temp_list)
+                            vtpdetect_data.append(temp_list)
 
-            else:
+                else:
 
-                os.remove(vtpdetect_file)
-                os.remove(evtfile_new)
+                    os.remove(vtpdetect_file)
+                    os.remove(evtfile_new)
 
     with open(args.outfile, "w") as k:
 
@@ -149,11 +177,11 @@ if __name__ == "__main__":
 
         vtpdetect_data_unique = unique_list(vtpdetect_data, range(1, len(master_data.dtype.names)))
 
-        for n,i in enumerate(range(len(vtpdetect_data_unique))):
+        for i in range(len(vtpdetect_data_unique)):
 
             temp_list = []
 
-            temp_list.append(str(n+1))
+            temp_list.append(str(i+1))
 
             for j in range(1,len(master_data.dtype.names)+1):
 
