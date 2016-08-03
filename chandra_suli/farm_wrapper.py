@@ -151,6 +151,14 @@ if __name__ == "__main__":
             # now you have to go there
             with work_within_directory(workdir):
 
+                # copy parameter files into this directory to avoid any glitches with the NFS
+
+                par_files = glob.glob(os.path.join(os.path.expanduser('~/pfiles'),'*.par'))
+
+                for par_file in par_files:
+
+                    shutil.copy(par_file, workdir)
+
                 # Copy in the input files
 
                 data_dir = os.path.join(indir, str(this_obsid))
