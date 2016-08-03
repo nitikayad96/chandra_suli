@@ -215,6 +215,8 @@ if __name__ == "__main__":
 
                 output_files = glob.glob("*candidate*.reg")
 
+                output_files.extend(glob.glob("%s_all_regions.fits" %(this_obsid)))
+
                 output_files.extend(glob.glob("*_res.*"))
 
                 output_files.extend(glob.glob("*_filtered.fits"))
