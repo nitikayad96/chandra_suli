@@ -173,9 +173,13 @@ if __name__ == "__main__":
 
     if os.path.exists(args.outfile):
 
-        current_data = np.array(np.recfromtxt(args.outfile, names=True), ndmin=1)
+        old_data = np.array(np.recfromtxt(args.outfile, names=True), ndmin=1)
 
-        current_data.tolist()
+        current_data = []
+
+        for list in old_data:
+            
+            current_data.append(list.tolist())
 
         for i in range(len(vtpdetect_data_unique)):
 
