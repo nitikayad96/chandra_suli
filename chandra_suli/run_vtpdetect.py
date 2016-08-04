@@ -178,7 +178,7 @@ if __name__ == "__main__":
         current_data = []
 
         for list in old_data:
-            
+
             current_data.append(list.tolist())
 
         for i in range(len(vtpdetect_data_unique)):
