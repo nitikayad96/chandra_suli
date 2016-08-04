@@ -42,7 +42,7 @@ if __name__=="__main__":
 
             with work_within_directory(str(this_obsid)):
 
-                ccd_files = find_files.find_files('.','ccd*%s*fits'%this_obsid)
+                ccd_files = find_files.find_files('.','ccd*%s*_filtered.fits'%this_obsid)
                 ccd_files = sorted(ccd_files)
 
                 ccd_bb_files = find_files.find_files('.', 'ccd*%s*res.txt' %this_obsid)
@@ -50,6 +50,10 @@ if __name__=="__main__":
 
                 evtfile = find_files.find_files('.','*%s*evt3.fits' %this_obsid)[0]
 
+                if len(ccd_bb_files) != len(ccd_files):
+
+                    raise Exception("\n\nUnequal number of CCD files and BB files")
+                    
 
                 for i in xrange(len(ccd_bb_files)):
 
