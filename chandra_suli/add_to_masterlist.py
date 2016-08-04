@@ -123,7 +123,7 @@ if __name__=="__main__":
 
             # Sort new master list according to decreasing PSF fraction order
 
-            master_data_sorted = sorted(master_data_new, key=lambda data_row: data_row[-2], reverse=True)
+            master_data_sorted = sorted(master_data_new, key=lambda data_row: data_row[-1], reverse=True)
 
             master_data_unique = unique_list(master_data_sorted,range(1,len(master_data_og.dtype.names)))
 

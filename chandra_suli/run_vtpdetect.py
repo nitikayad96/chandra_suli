@@ -174,6 +174,8 @@ if __name__ == "__main__":
 
     vtpdetect_data_unique = unique_list(vtpdetect_data, range(1, len(master_data.dtype.names)))
 
+    vtpdetect_sorted = sorted(vtpdetect_data_unique, key=lambda data_row: data_row[-2], reverse=True)
+
     if os.path.exists(args.outfile):
 
         old_data = np.array(np.recfromtxt(args.outfile, names=True), ndmin=1)
@@ -184,13 +186,13 @@ if __name__ == "__main__":
 
             current_data.append(list.tolist())
 
-        for i in range(len(vtpdetect_data_unique)):
+        for i in range(len(vtpdetect_sorted)):
 
-            current_data.append(vtpdetect_data_unique[i])
+            current_data.append(vtpdetect_sorted[i])
 
     else:
 
-        current_data = vtpdetect_data_unique
+        current_data = vtpdetect_sorted
 
 
     with open(args.outfile, "w") as k:
