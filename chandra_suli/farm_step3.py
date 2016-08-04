@@ -56,7 +56,10 @@ if __name__=="__main__":
                     og_file = os.path.basename(ccd_bb_files[i])
 
                     ccd_bb_file = ccd_bb_files[i]
+                    print ccd_bb_file
+
                     ccd_file = ccd_files[i]
+                    print ccd_file
 
                     check_hp_file = "check_hp_%s" %og_file
 
