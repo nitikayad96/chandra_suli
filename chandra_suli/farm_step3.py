@@ -53,7 +53,6 @@ if __name__=="__main__":
                 if len(ccd_bb_files) != len(ccd_files):
 
                     raise Exception("\n\nUnequal number of CCD files and BB files")
-                    
 
                 for i in xrange(len(ccd_bb_files)):
 
