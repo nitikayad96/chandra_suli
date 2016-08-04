@@ -23,6 +23,9 @@ if __name__=="__main__":
                         type=str)
     parser.add_argument("-f", "--outfile", help="Name of output file which will contain filtered list of transients",
                         required=True)
+    parser.add_argument("-s", "--resampleFactor",
+                        help="Oversample the input image by this factor before processing",
+                        type=int, default=5, required=False)
 
     # Get the logger
     logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
@@ -91,8 +94,8 @@ if __name__=="__main__":
 
             outdir = os.path.join(os.getcwd(), str(this_obsid))
 
-            cmd_line = "run_vtpdetect.py --masterfile %s --outfile %s --data_dir %s --outdir %s" \
-                       %(temp_masterfile, args.outfile, args.data_path, outdir)
+            cmd_line = "run_vtpdetect.py --masterfile %s --outfile %s --data_dir %s --outdir %s --resampleFactor %s" \
+                       %(temp_masterfile, args.outfile, args.data_path, outdir, args.resampleFactor)
 
             runner.run(cmd_line)
 
