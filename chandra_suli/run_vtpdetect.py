@@ -27,6 +27,9 @@ if __name__ == "__main__":
     parser.add_argument("--data_dir", help="Path to directory containing data of all obsids", required=True,
                         type=str)
     parser.add_argument("--outdir", help="Directory where output files will go", required=True, type=str)
+    parser.add_argument("-s", "--resampleFactor",
+                        help="Oversample the input image by this factor before processing",
+                        type=int, default=5, required=False)
 
     # Get logger for this command
 
@@ -76,8 +79,8 @@ if __name__ == "__main__":
 
             # run this to create filtered exposure map to match filtered event file to use during vtpdetect
 
-            cmd_line = "xtcheesemask.py -i %s -r %s -o %s -s 1 --no-reverse" \
-                       %(expfile, evtfile, expfile_new)
+            cmd_line = "xtcheesemask.py -i %s -r %s -o %s -s %s --no-reverse" \
+                       %(expfile, evtfile, expfile_new, args.resampleFactor)
 
             runner.run(cmd_line)
 
