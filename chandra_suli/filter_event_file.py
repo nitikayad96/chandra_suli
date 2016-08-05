@@ -67,7 +67,6 @@ def cross_match(region_files_db, region_files_obsid):
             index = names_db.index(source)
 
             print names_db[index]
-            print region_files_db[index]
 
         except ValueError:
 
@@ -75,7 +74,9 @@ def cross_match(region_files_db, region_files_obsid):
 
         else:
 
-            region_files_db.pop(index)
+            print region_files_db.index(source)
+
+            region_files_db.pop(region_files_db.index(source))
 
     cleaned_regions = list(region_files_obsid)
 
