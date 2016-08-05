@@ -25,6 +25,7 @@ import re
 from chandra_suli import sanitize_filename
 from chandra_suli import query_region_db
 from chandra_suli import find_files
+from chandra_suli import setup_ftools
 
 
 def is_variable(tsv_file, name_of_the_source):
@@ -119,6 +120,10 @@ if __name__=="__main__":
     # assumption = all level 3 region files and event file are already downloaded into same directory
 
     args = parser.parse_args()
+
+    # Setup the FTOOLS so they can be run non-interactively
+    
+    setup_ftools.setup_ftools_non_interactive()
 
     #creates text file with name of all level 3 region files for given Obs ID
 
@@ -236,7 +241,7 @@ if __name__=="__main__":
 
     all_regions_file = '%s_all_regions.fits' %(obsid)
 
-    cmd_line = 'fmerge @%s %s clobber=yes columns=-' % (regions_list_file, all_regions_file)
+    cmd_line = 'ftmerge @%s %s clobber=yes columns=-' % (regions_list_file, all_regions_file)
 
     if args.debug:
 
