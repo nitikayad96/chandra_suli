@@ -15,11 +15,15 @@ dmcopy "acisf00635_000N001_evt3.fits[exclude sky=region(acisf00635_000N001_r0101
 import argparse
 import subprocess
 import os
+import warnings
 import sys
 import astropy.io.fits as pyfits
 import numpy as np
 import glob
+import re
 
+from chandra_suli import sanitize_filename
+from chandra_suli import query_region_db
 from chandra_suli import find_files
 
 
@@ -42,6 +46,40 @@ def is_variable(tsv_file, name_of_the_source):
     if str(tsv_data['var_flag'][idx]) == "TRUE" or str(tsv_data['var_flag'][idx]) == " TRUE":
 
         return True
+
+
+def cross_match(region_files_db, region_files_obsid):
+
+    # Get the names of all the sources contained respectively in the OBSID catalog and in the DB catalog
+
+    names_obsid = map(lambda x: re.match('(.+)/(CXOJ.+)/.+', x).groups()[1], region_files_obsid)
+
+    names_db = map(lambda x: re.match('(.+)/(CXOJ.+)/.+', x).groups()[1], region_files_db)
+
+    # Loop over all sources in the OBSID catalog, and remove them from teh DB catalog. At the end,
+    # the union between the OBSID catalog and the remaining of the DB catalog will give the
+    # complete catalog
+
+    for source in names_obsid:
+
+        try:
+
+            index = names_db.index(source)
+
+        except ValueError:
+
+            warnings.warn("Source %s is in the OBSID catalog but not in the DB catalog" % source)
+
+        else:
+
+            region_files_db.pop(index)
+
+    cleaned_regions = list(region_files_obsid)
+
+    cleaned_regions.extend(region_files_db)
+
+    return cleaned_regions
+
 
 
 if __name__=="__main__":
@@ -80,7 +118,31 @@ if __name__=="__main__":
 
         obsid = os.path.basename(os.path.split(args.region_dir)[0])
 
-    region_files = find_files.find_files(args.region_dir, "*reg3.fits.gz")
+    # Get the region files from this observation
+
+    region_files_obsid = find_files.find_files(args.region_dir, "*reg3.fits.gz")
+
+    # Get the pointing from the event file
+
+    evtfile = sanitize_filename.sanitize_filename(args.evtfile)
+
+    with pyfits.open(evtfile) as f:
+
+        ra_pnt = f['EVENTS'].header.get("RA_PNT")
+        dec_pnt = f['EVENTS'].header.get("DEC_PNT")
+
+    # Query a region of 30 arcmin, which should always cover the whole Chandra field of view,
+    # to get the regions from the database
+
+    region_dir = sanitize_filename.sanitize_filename(args.region_dir)
+
+    region_files_db = query_region_db.query_region_db(ra_pnt, dec_pnt, 30.0, region_dir)
+
+    # Now cross match the regions we got from the DB with the regions we got from this obsid
+    # We try to use the information relative to this obsid as much as possible, but if there is no
+    # info on a given source in this obsid we take it from the db
+
+    region_files = cross_match(region_files_db, region_files_obsid)
 
     n_reg = len(region_files)
 
@@ -159,7 +221,7 @@ if __name__=="__main__":
 
     all_regions_file = '%s_all_regions.fits' %(obsid)
 
-    cmd_line = 'dmmerge @%s %s clobber=yes mode=h' % (regions_list_file, all_regions_file)
+    cmd_line = 'ftmerge @%s %s clobber=yes' % (regions_list_file, all_regions_file)
 
     if args.debug:
 
