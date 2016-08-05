@@ -68,15 +68,18 @@ def cross_match(region_files_db, region_files_obsid):
 
             print names_db[index]
 
+            names_db.pop(index)
+
         except ValueError:
 
             warnings.warn("Source %s is in the OBSID catalog but not in the DB catalog" % source)
 
         else:
 
-            print region_files_db.index(source)
+            print region_files_db[index]
 
-            region_files_db.pop(region_files_db.index(source))
+            region_files_db.pop(index)
+            
 
     cleaned_regions = list(region_files_obsid)
 
