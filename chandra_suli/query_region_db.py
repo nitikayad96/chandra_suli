@@ -29,4 +29,8 @@ def query_region_db(ra_center, dec_center, radius, region_dir):
 
     # Return the corresponding region files
 
-    return data['REGION_FILE'][idx]
+    data_list = data['REGION_FILE'][idx]
+
+    data_list.tolist()
+
+    return data_list
