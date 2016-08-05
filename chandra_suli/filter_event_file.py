@@ -112,15 +112,17 @@ if __name__=="__main__":
 
     #creates text file with name of all level 3 region files for given Obs ID
 
-    obsid = os.path.split(args.region_dir)[-1]
+    region_dir = sanitize_filename.sanitize_filename(args.region_dir)
 
-    if len(obsid) == 0:
+    obsid = os.path.split(region_dir)[-1]
 
-        obsid = os.path.basename(os.path.split(args.region_dir)[0])
+    # region_dir is specific to one obsid. Get general region repository where db is located
+
+    db_dir = os.path.split(region_dir)[0]
 
     # Get the region files from this observation
 
-    region_files_obsid = find_files.find_files(args.region_dir, "*reg3.fits.gz")
+    region_files_obsid = find_files.find_files(region_dir, "*reg3.fits.gz")
 
     # Get the pointing from the event file
 
@@ -134,9 +136,7 @@ if __name__=="__main__":
     # Query a region of 30 arcmin, which should always cover the whole Chandra field of view,
     # to get the regions from the database
 
-    region_dir = sanitize_filename.sanitize_filename(args.region_dir)
-
-    region_files_db = query_region_db.query_region_db(ra_pnt, dec_pnt, 30.0, region_dir)
+    region_files_db = query_region_db.query_region_db(ra_pnt, dec_pnt, 30.0, db_dir)
 
     # Now cross match the regions we got from the DB with the regions we got from this obsid
     # We try to use the information relative to this obsid as much as possible, but if there is no
