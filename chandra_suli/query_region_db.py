@@ -33,6 +33,6 @@ def query_region_db(ra_center, dec_center, radius, region_dir):
 
     for i in data['REGION_FILE'][idx]:
 
-        data_list.append(i)
+        data_list.append(os.path.join(region_dir, i))
 
     return data_list

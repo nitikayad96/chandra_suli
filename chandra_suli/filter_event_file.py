@@ -171,7 +171,7 @@ if __name__=="__main__":
 
             os.remove(temp_file)
 
-        cmd_line = 'dmcopy %s[SRCREG][SHAPE=Ellipse] %s clobber=yes' % (sanitize_filename.sanitize_filename(region_file), temp_file)
+        cmd_line = 'dmcopy %s[SRCREG][SHAPE=Ellipse] %s clobber=yes' % (region_file, temp_file)
 
         if args.debug:
 
