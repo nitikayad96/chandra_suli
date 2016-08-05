@@ -60,15 +60,14 @@ def cross_match(region_files_db, region_files_obsid):
     # the union between the OBSID catalog and the remaining of the DB catalog will give the
     # complete catalog
 
-    print len(region_files_db)
-
     for source in names_obsid:
 
         try:
 
             index = names_db.index(source)
 
-            print str(names_db[index]==region_files_db[index])
+            print names_db[index]
+            print region_files_db[index]
 
         except ValueError:
 
