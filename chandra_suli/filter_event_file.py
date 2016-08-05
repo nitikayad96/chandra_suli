@@ -54,11 +54,17 @@ def cross_match(region_files_db, region_files_obsid):
 
     names_obsid = map(lambda x: re.match('(.+)/(CXOJ.+)/.+', x).groups()[1], region_files_obsid)
 
+    print len(names_obsid)
+
     names_db = map(lambda x: re.match('(.+)/(CXOJ.+)/.+', x).groups()[1], region_files_db)
+
+    print len(names_db)
 
     # Loop over all sources in the OBSID catalog, and remove them from teh DB catalog. At the end,
     # the union between the OBSID catalog and the remaining of the DB catalog will give the
     # complete catalog
+
+    print len(region_files_db)
 
     for source in names_obsid:
 
