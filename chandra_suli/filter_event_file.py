@@ -66,7 +66,8 @@ def cross_match(region_files_db, region_files_obsid):
 
             index = names_db.index(source)
 
-            print names_db[index]
+            if args.debug:
+                print names_db[index]
 
             names_db.pop(index)
 
@@ -76,7 +77,9 @@ def cross_match(region_files_db, region_files_obsid):
 
         else:
 
-            print region_files_db[index]
+            if args.debug:
+
+                print region_files_db[index]
 
             region_files_db.pop(index)
 
@@ -168,7 +171,7 @@ if __name__=="__main__":
 
             os.remove(temp_file)
 
-        cmd_line = 'dmcopy %s[SRCREG][SHAPE=Ellipse] %s clobber=yes' % (sanitize_filename(region_file), temp_file)
+        cmd_line = 'dmcopy %s[SRCREG][SHAPE=Ellipse] %s clobber=yes' % (sanitize_filename.sanitize_filename(region_file), temp_file)
 
         if args.debug:
 
