@@ -236,7 +236,7 @@ if __name__=="__main__":
 
     all_regions_file = '%s_all_regions.fits' %(obsid)
 
-    cmd_line = 'ftmerge @%s %s clobber=yes' % (regions_list_file, all_regions_file)
+    cmd_line = 'fmerge @%s %s clobber=yes' % (regions_list_file, all_regions_file)
 
     if args.debug:
 
