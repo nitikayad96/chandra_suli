@@ -201,16 +201,21 @@ if __name__=="__main__":
         # Crossmatch with tsv file
         ##########################
 
-        if is_variable(args.tsvfile, source_name) == True:
+        try:
 
-            # open the file with "mode='update'"
+            if is_variable(args.tsvfile, source_name) == True:
 
-            with pyfits.open(temp_file, mode='update', memmap=False) as reg:
+                # open the file with "mode='update'"
 
-                reg['SRCREG'].data.R = args.adj_factor * reg['SRCREG'].data.R
+                with pyfits.open(temp_file, mode='update', memmap=False) as reg:
 
-            # adjust the size of both axis by a factor (another argument)
+                    reg['SRCREG'].data.R = args.adj_factor * reg['SRCREG'].data.R
 
+                # adjust the size of both axis by a factor (another argument)
+
+        except ValueError:
+
+            pass
 
         temp_files.append(temp_file)
 
