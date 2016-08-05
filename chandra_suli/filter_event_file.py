@@ -138,8 +138,6 @@ if __name__=="__main__":
 
     region_files_db = query_region_db.query_region_db(ra_pnt, dec_pnt, 30.0, db_dir)
 
-    region_files_db.tolist()
-
     # Now cross match the regions we got from the DB with the regions we got from this obsid
     # We try to use the information relative to this obsid as much as possible, but if there is no
     # info on a given source in this obsid we take it from the db
