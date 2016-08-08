@@ -64,7 +64,7 @@ if __name__=="__main__":
 
             for i in range(bb_n):
 
-                if bb_data['Hot_Pixel_Flag'][i] == False:
+                if bb_data['Hot_Pixel_Flag'][i] == False and bb_data['PSFfrac'][i] > 0.9:
 
                     master_data.append(bb_data[i])
 
