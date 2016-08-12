@@ -196,15 +196,15 @@ if __name__=="__main__":
 
             print(cmd_line)
 
-        runner.run(cmd_line)
+        subprocess.check_call(cmd_line, shell=True)
 
         # Fix the column format, if needed
 
         cmd_line = "fcollen '%s' X 1" % temp_file
-        runner.run(cmd_line)
+        subprocess.check_call(cmd_line, shell=True)
 
         cmd_line = "fcollen '%s' Y 1" % temp_file
-        runner.run(cmd_line)
+        subprocess.check_call(cmd_line, shell=True)
 
         # Adjust the size of the ellipse, if this source is variable
 
@@ -261,8 +261,7 @@ if __name__=="__main__":
 
         print(cmd_line)
 
-
-    runner.run(cmd_line)
+    subprocess.check_call(cmd_line, shell=True)
 
     # Now fix the COMPONENT column (each region must be a different component, otherwise
     # dmcopy will crash)
@@ -293,7 +292,7 @@ if __name__=="__main__":
 
         print(cmd_line)
 
-    runner.run(cmd_line)
+    subprocess.check_call(cmd_line, shell=True)
 
     cmd_line = 'dmcopy %s[energy=%d:%d] %s opt=all clobber=yes' %(temp_filter, args.emin, args.emax, args.outfile)
 
@@ -301,7 +300,7 @@ if __name__=="__main__":
 
         print(cmd_line)
 
-    runner.run(cmd_line)
+    subprocess.check_call(cmd_line, shell=True)
 
     # TODO: remove files
     files_to_remove = glob.glob("__*")
