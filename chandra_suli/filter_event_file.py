@@ -26,6 +26,8 @@ from chandra_suli import sanitize_filename
 from chandra_suli import query_region_db
 from chandra_suli import find_files
 from chandra_suli import setup_ftools
+from chandra_suli.run_command import CommandRunner
+from chandra_suli import logging_system
 
 
 def is_variable(tsv_file, name_of_the_source):
@@ -119,6 +121,14 @@ if __name__=="__main__":
 
     # assumption = all level 3 region files and event file are already downloaded into same directory
 
+    # Get logger for this command
+
+    logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
+
+    # Instance the command runner
+
+    runner = CommandRunner(logger)
+
     args = parser.parse_args()
 
     # Setup the FTOOLS so they can be run non-interactively
@@ -151,11 +161,15 @@ if __name__=="__main__":
     # Query a region of 30 arcmin, which should always cover the whole Chandra field of view,
     # to get the regions from the database
 
+    print "Querying region database..."
+
     region_files_db = query_region_db.query_region_db(ra_pnt, dec_pnt, 30.0, db_dir)
 
     # Now cross match the regions we got from the DB with the regions we got from this obsid
     # We try to use the information relative to this obsid as much as possible, but if there is no
     # info on a given source in this obsid we take it from the db
+
+    print "Cross-matching region files..."
 
     region_files = cross_match(region_files_db, region_files_obsid)
 
@@ -182,15 +196,15 @@ if __name__=="__main__":
 
             print(cmd_line)
 
-        subprocess.check_call(cmd_line, shell=True)
+        runner.run(cmd_line)
 
         # Fix the column format, if needed
 
         cmd_line = "fcollen '%s' X 1" % temp_file
-        subprocess.check_call(cmd_line, shell=True)
+        runner.run(cmd_line)
 
         cmd_line = "fcollen '%s' Y 1" % temp_file
-        subprocess.check_call(cmd_line, shell=True)
+        runner.run(cmd_line)
 
         # Adjust the size of the ellipse, if this source is variable
 
@@ -247,7 +261,8 @@ if __name__=="__main__":
 
         print(cmd_line)
 
-    subprocess.check_call(cmd_line, shell=True)
+
+    runner.run(cmd_line)
 
     # Now fix the COMPONENT column (each region must be a different component, otherwise
     # dmcopy will crash)
@@ -278,7 +293,7 @@ if __name__=="__main__":
 
         print(cmd_line)
 
-    subprocess.check_call(cmd_line, shell=True)
+    runner.run(cmd_line)
 
     cmd_line = 'dmcopy %s[energy=%d:%d] %s opt=all clobber=yes' %(temp_filter, args.emin, args.emax, args.outfile)
 
@@ -286,7 +301,7 @@ if __name__=="__main__":
 
         print(cmd_line)
 
-    subprocess.check_call(cmd_line, shell=True)
+    runner.run(cmd_line)
 
     # TODO: remove files
     files_to_remove = glob.glob("__*")
