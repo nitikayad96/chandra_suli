@@ -62,9 +62,8 @@ if __name__=="__main__":
 
     # Append new data to existing data
 
-    for i in range(bb_n):
 
-        np.concatenate(master_data, bb_data[i])
+    np.append(master_data, bb_data[i], axis=0)
 
     data_all = pd.DataFrame.from_records(master_data)
 
