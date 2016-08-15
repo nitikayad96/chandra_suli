@@ -83,20 +83,8 @@ if __name__=="__main__":
 
                 check_var_files = find_files.find_files('.','check_var*%s*txt' %this_obsid)
 
-            temp_masterfile = '__temp_masterfile.txt'
-
             for check_var_file in check_var_files:
 
-                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, temp_masterfile)
+                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.outfile)
 
                 runner.run(cmd_line)
-
-
-            outdir = os.path.join(os.getcwd(), str(this_obsid))
-
-            cmd_line = "run_vtpdetect.py --masterfile %s --outfile %s --data_dir %s --outdir %s --resampleFactor %s" \
-                       %(temp_masterfile, args.outfile, args.data_path, outdir, args.resampleFactor)
-
-            runner.run(cmd_line)
-
-            os.remove(temp_masterfile)
