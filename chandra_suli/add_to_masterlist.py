@@ -130,16 +130,18 @@ if __name__=="__main__":
             # Write to file
             for i in range(len(master_data_unique)):
 
-                temp_list = []
-                temp_list.append(str(i+1))
+                if master_data_unique[i][-1] > 0.9:
 
-                for j in xrange(1,len(master_data_og.dtype.names)):
+                    temp_list = []
+                    temp_list.append(str(i+1))
 
-                    temp_list.append(str(master_data_unique[i][j]))
+                    for j in xrange(1,len(master_data_og.dtype.names)):
 
-                line = " ".join(temp_list)
+                        temp_list.append(str(master_data_unique[i][j]))
 
-                f.write("%s\n" % line)
+                    line = " ".join(temp_list)
+
+                    f.write("%s\n" % line)
 
 
 
