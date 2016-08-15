@@ -9,11 +9,10 @@ import os
 import argparse
 import sys
 import numpy as np
+import pandas as pd
 
-from chandra_suli.unique_list import unique_list
 from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
-
 
 
 if __name__=="__main__":
@@ -46,104 +45,65 @@ if __name__=="__main__":
     # number of rows of data
     bb_n = len(bb_data)
 
+    # column names
+    existing_column_names = " ".join(bb_data.dtype.names)
+
 
     # If fresh list is to be started
 
     if not os.path.exists(args.masterfile):
 
-        existing_column_names = " ".join(bb_data.dtype.names)
-
         # new array with relevant data
-        master_data = []
-
-        with open(args.masterfile,"w") as f:
-
-            f.write("# Rank %s\n" % existing_column_names)
-
-            # Only consider candidates that aren't marked as hot pixels
-
-            for i in range(bb_n):
-
-                if bb_data['Hot_Pixel_Flag'][i] == False and bb_data['PSFfrac'][i] > 0.9:
-
-                    master_data.append(bb_data[i])
-
-            # sort according to PSF fraction, highest to lowest
-
-            master_data_sorted = sorted(master_data, key=lambda data_row: data_row[-1], reverse=True)
-
-            # Write all sources to text file
-
-            i = 0
-
-            while i < len(master_data_sorted) and master_data_sorted[i][-1] > 0.9:
-
-                temp_list = []
-
-                temp_list.append(str(i+1))
-
-                for j in xrange(len(bb_data.dtype.names)):
-
-                    temp_list.append(str(master_data_sorted[i][j]))
-
-
-                line = " ".join(temp_list)
-
-                f.write("%s\n" % line)
-
-                i += 1
-
+        master_data = np.empty(shape=[0, len(bb_data[0])])
 
     else:
 
-        # Get original data from master list
-        master_data_og = np.array(np.recfromtxt(args.masterfile, names=True), ndmin=1)
+        master_data = np.array(np.recfromtxt(args.masterfile, names=True), ndmin=1)
 
-        # Transform it to a python list from a numpy array
-        master_data_new = master_data_og.tolist()
+    # Append new data to existing data
 
-        existing_column_names = " ".join(master_data_og.dtype.names)
+    for i in range(bb_n):
 
-        with open(args.masterfile,"w") as f:
+        np.concatenate(master_data, bb_data[i])
 
-            f.write("# %s\n" % existing_column_names)
+    data_all = pd.DataFrame.from_records(master_data)
 
-            for i in range(bb_n):
+    # Drop all duplicates
 
-                temp_list = []
+    data_unique = data_all.drop_duplicates(subset=['Candidate','Obsid','CCD'])
 
-                # Add candidate to master list if it's not a hot pixel
-                if bb_data['Hot_Pixel_Flag'][i] == False:
+    # Keep only data satisfying the following conditions
 
-                    temp_list = [0]
-                    temp_list.extend(bb_data[i])
+    idx = (data_unique['PSFfrac'] > 0.95) & (data_unique['Probability'] < 1e-5) \
+                & (data_unique['Hot_Pixel_Flag']==False)
 
+    # Sort according to PSFfrac
 
-                    master_data_new.append(temp_list)
+    master_data_sorted = sorted(data_unique[idx], key=lambda data_row: data_row[-1], reverse=True)
 
-            # Sort new master list according to decreasing PSF fraction order
+    # Write data to text file
 
-            master_data_sorted = sorted(master_data_new, key=lambda data_row: data_row[-1], reverse=True)
+    with open(args.masterfile,"w") as f:
 
-            master_data_unique = unique_list(master_data_sorted,range(1,len(master_data_og.dtype.names)))
+        f.write("# Rank %s\n" % existing_column_names)
 
-            # Write to file
-            for i in range(len(master_data_unique)):
+        i = 0
 
-                if master_data_unique[i][-1] > 0.9:
+        while i < len(master_data_sorted):
 
-                    temp_list = []
-                    temp_list.append(str(i+1))
+            temp_list = []
 
-                    for j in xrange(1,len(master_data_og.dtype.names)):
+            temp_list.append(str(i+1))
 
-                        temp_list.append(str(master_data_unique[i][j]))
+            for j in xrange(len(bb_data.dtype.names)):
 
-                    line = " ".join(temp_list)
+                temp_list.append(str(master_data_sorted[i][j]))
 
-                    f.write("%s\n" % line)
+            line = " ".join(temp_list)
 
+            f.write("%s\n" % line)
 
+            i += 1
 
 
 
