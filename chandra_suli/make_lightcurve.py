@@ -53,16 +53,20 @@ if __name__=="__main__":
 
         # use region file from xtdac and cut region
 
-        region = find_files.find_files(obsid, "ccd_%s_%s_filtered_candidate_%s.reg" %(ccd, obsid, candidate))
-        event_file = find_files.find_files(obsid, "ccd_%s_%s_filtered.fits" %(ccd, obsid))
+        regions = find_files.find_files(str(obsid), "ccd_%s_%s_filtered_candidate_%s.reg" %(ccd, obsid, candidate))
+        event_file = find_files.find_files(str(obsid), "ccd_%s_%s_filtered.fits" %(ccd, obsid))[0]
 
-        if len(region) != 1:
+        if len(regions) != 1:
 
             raise IOError("More than one region file found")
 
+        else:
+
+            region = regions[0]
+
         evt_reg = "ccd_%s_%s_filtered_candidate_%s_reg.fits" %(ccd, obsid, candidate)
 
-        cmd_line = "ftcopy %s[EVENTS][regfilter(\'%s\') %s clobber=yes " %(event_file, region, evt_reg)
+        cmd_line = "ftcopy \'%s[EVENTS][regfilter(\"%s\")]\' %s clobber=yes " %(event_file, region, evt_reg)
 
         runner.run(cmd_line)
 
@@ -93,14 +97,14 @@ if __name__=="__main__":
 
         plt.xlabel("Time since trigger (s)")
         plt.ylabel("Count rate (cts/s)")
-        plt.title("Transient Lightcurve\nObsID = %s, CCD ID = %s\n" %(obsid, ccd))
+        plt.title("Transient Lightcurve\nObsID = %s, CCD ID = %s, Candidate=%s\n" %(obsid, ccd, candidate))
 
         plot_file = "ccd_%s_%s_candidate_%s_lightcurve.png" %(ccd, obsid, candidate)
 
         plt.savefig(plot_file)
 
-        os.rename(plot_file, os.path.join(data_path, obsid, plot_file))
-        os.rename(evt_reg,os.path.join(data_path, obsid, evt_reg))
+        os.rename(plot_file, os.path.join(data_path, str(obsid), plot_file))
+        os.rename(evt_reg,os.path.join(data_path, str(obsid), evt_reg))
 
 
 
