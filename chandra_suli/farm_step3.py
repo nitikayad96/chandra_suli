@@ -88,6 +88,7 @@ if __name__=="__main__":
 
             for check_var_file in check_var_files:
 
-                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s" %(check_var_file, args.outfile)
+                cmd_line = "add_to_masterlist.py --bbfile %s --masterfile %s --evtfile %s" \
+                           %(check_var_file, args.outfile, evtfile)
 
                 runner.run(cmd_line)
