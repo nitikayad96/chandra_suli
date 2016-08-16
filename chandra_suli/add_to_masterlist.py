@@ -10,6 +10,7 @@ import argparse
 import sys
 import numpy as np
 import pandas as pd
+import astropy.io.fits as pyfits
 
 from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
@@ -23,6 +24,8 @@ if __name__=="__main__":
     parser.add_argument("--bbfile",help="Input text file (already checked for hot pixels and variable sources",
                         required=True, type=str)
     parser.add_argument("--masterfile",help="Path to file containing list of transients in this set",
+                        required=True, type=str)
+    parser.add_argument("--evtfile", help="Main event file for observation, used to get total exposure time",
                         required=True, type=str)
 
 
@@ -42,6 +45,8 @@ if __name__=="__main__":
 
     masterfile = sanitize_filename(args.masterfile)
 
+    evtfile = sanitize_filename(args.evtfile)
+
     # read BB data into array
     bb_data = np.array(np.recfromtxt(bb_file_path,names=True), ndmin=1)
 
@@ -50,6 +55,10 @@ if __name__=="__main__":
 
     # column names
     existing_column_names = " ".join(bb_data.dtype.names)
+
+    with pyfits.open(evtfile) as evt:
+
+        exposure = evt['EVENTS'].header['EXPOSURE']
 
     # If fresh list is to be started
 
@@ -108,7 +117,8 @@ if __name__=="__main__":
     # Keep only data satisfying the following conditions
 
     idx = (data_unique['PSFfrac'] > 0.95) & (data_unique['Probability'] < 1e-5) \
-                & (data_unique['Hot_Pixel_Flag']==False)
+          & (data_unique['Hot_Pixel_Flag']==False) \
+          & (data_unique['Tstop'] - data_unique['Tstart'] <= 0.7*exposure)
 
     # Sort according to PSFfrac
 
