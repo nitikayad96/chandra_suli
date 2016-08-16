@@ -112,7 +112,7 @@ if __name__=="__main__":
     data_all = pd.DataFrame.from_records(data_raw)
     # Drop all duplicates
 
-    data_unique = data_all.drop_duplicates()
+    data_unique = data_all.drop_duplicates(subset=['Candidate','Obsid','CCD'])
 
     # Keep only data satisfying the following conditions
 
