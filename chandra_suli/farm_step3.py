@@ -12,11 +12,12 @@ from chandra_suli import find_files
 from chandra_suli import logging_system
 from chandra_suli.run_command import CommandRunner
 from chandra_suli.work_within_directory import work_within_directory
+from chandra_suli.sanitize_filename import sanitize_filename
 
 if __name__=="__main__":
 
-    parser = argparse.ArgumentParser(description='Check each candidate transient for hot pixels and '
-                                                 'closest variable source')
+    parser = argparse.ArgumentParser(description='Check for hot pixels/variable sources, add them to a '
+                                                 'transient masterlist, and generate lightcurves')
 
     parser.add_argument("-o","--obsid",help="Observation ID Numbers", type=int, required=True, nargs = "+")
     parser.add_argument("-d", "--data_path", help="Path to directory containing data of all obsids", required = True,
@@ -35,7 +36,9 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    with work_within_directory(args.data_path):
+    data_path = sanitize_filename(args.data_path)
+
+    with work_within_directory(data_path):
 
         for this_obsid in args.obsid:
 
