@@ -106,5 +106,7 @@ if __name__=="__main__":
         os.rename(plot_file, os.path.join(data_path, str(obsid), plot_file))
         os.rename(evt_reg,os.path.join(data_path, str(obsid), evt_reg))
 
+        plt.close()
+
 
 
