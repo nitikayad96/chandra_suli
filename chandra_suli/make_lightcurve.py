@@ -8,6 +8,9 @@ import argparse
 import os
 import sys
 import numpy as np
+import astropy.io.fits as pyfits
+import matplotlib.pyplot as plt
+import seaborn as sbs
 
 from chandra_suli import find_files
 from chandra_suli import logging_system
@@ -35,8 +38,7 @@ if __name__=="__main__":
 
     # Get data from masterfile
 
-
-
+    data_path = sanitize_filename(args.data_path)
     masterfile = sanitize_filename(args.masterfile)
 
     transient_data = np.array(np.recfromtxt(masterfile, names=True), ndmin=1)
@@ -51,9 +53,54 @@ if __name__=="__main__":
 
         # use region file from xtdac and cut region
 
-        region = find_files.find_files(obsid, )
+        region = find_files.find_files(obsid, "ccd_%s_%s_filtered_candidate_%s.reg" %(ccd, obsid, candidate))
+        event_file = find_files.find_files(obsid, "ccd_%s_%s_filtered.fits" %(ccd, obsid))
 
+        if len(region) != 1:
 
+            raise IOError("More than one region file found")
+
+        evt_reg = "ccd_%s_%s_filtered_candidate_%s_reg.fits" %(ccd, obsid, candidate)
+
+        cmd_line = "ftcopy %s[EVENTS][regfilter(\'%s\') %s clobber=yes " %(event_file, region, evt_reg)
+
+        runner.run(cmd_line)
+
+        data = pyfits.getdata(evt_reg)
+
+        sbs.set(font_scale=2)
+        sbs.set_style('white')
+
+        fig = plt.figure(figsize=(15, 15 / 1.33333))
+
+        duration = tstop - tstart
+
+        bins = np.arange(-10 * duration, 10 * duration, duration)
+
+        time = data.field("TIME")
+
+        rate, obins, _ = plt.hist(time - tstart, bins, weights=np.ones(time.shape[0]) * 1.0 / duration,
+                                  color='white')
+
+        # Centers of the bins
+
+        tc = (bins[:-1] + bins[1:]) / 2.0
+
+        plt.errorbar(tc, rate, yerr=np.sqrt(rate * duration) / duration, fmt='.')
+
+        plt.axvline(0, linestyle=':')
+        plt.axvline(duration, linestyle=':')
+
+        plt.xlabel("Time since trigger (s)")
+        plt.ylabel("Count rate (cts/s)")
+        plt.title("Transient Lightcurve\nObsID = %s, CCD ID = %s\n" %(obsid, ccd))
+
+        plot_file = "ccd_%s_%s_candidate_%s_lightcurve.png" %(ccd, obsid, candidate)
+
+        plt.savefig(plot_file)
+
+        os.rename(plot_file, os.path.join(data_path, obsid, plot_file))
+        os.rename(evt_reg,os.path.join(data_path, obsid, evt_reg))
 
 
 
