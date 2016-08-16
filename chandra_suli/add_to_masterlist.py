@@ -13,6 +13,7 @@ import pandas as pd
 
 from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli.sanitize_filename import sanitize_filename
 
 
 if __name__=="__main__":
@@ -37,7 +38,9 @@ if __name__=="__main__":
 
     # get directory path and file name from input file arguments
 
-    bb_file_path = os.path.abspath(os.path.expandvars(os.path.expanduser(args.bbfile)))
+    bb_file_path = sanitize_filename(args.bbfile)
+
+    masterfile = sanitize_filename(args.masterfile)
 
     # read BB data into array
     bb_data = np.array(np.recfromtxt(bb_file_path,names=True), ndmin=1)
@@ -48,28 +51,59 @@ if __name__=="__main__":
     # column names
     existing_column_names = " ".join(bb_data.dtype.names)
 
-
     # If fresh list is to be started
 
-    if not os.path.exists(args.masterfile):
+    if not os.path.exists(masterfile):
 
-        # new array with relevant data
-        master_data = np.empty(shape=[0, len(bb_data[0])])
+        # new array of appropriate size
+        master_data = np.empty([0, len(bb_data[0])+1])
 
     else:
 
-        master_data = np.array(np.recfromtxt(args.masterfile, names=True), ndmin=1)
+        master_data = np.array(np.recfromtxt(masterfile, names=True), ndmin=1)
 
-    # Append new data to existing data
+    with open('__temp.txt', "w") as temp:
+
+        temp.write("# %s\n" % existing_column_names)
+
+        i = 0
+
+        while i < len(master_data):
+
+            temp_list = []
 
 
-    np.append(master_data, bb_data[i], axis=0)
+            for j in xrange(1,len(bb_data.dtype.names)+1):
 
-    data_all = pd.DataFrame.from_records(master_data)
+                temp_list.append(str(master_data[i][j]))
 
+            line = " ".join(temp_list)
+
+            temp.write("%s\n" % line)
+
+            i += 1
+
+        i = 0
+
+        while i < len(bb_data):
+
+            temp_list = []
+
+            for j in xrange(len(bb_data.dtype.names)):
+                temp_list.append(str(bb_data[i][j]))
+
+            line = " ".join(temp_list)
+
+            temp.write("%s\n" % line)
+
+            i += 1
+
+    data_raw = np.array(np.recfromtxt("__temp.txt", names=True), ndmin=1)
+
+    data_all = pd.DataFrame.from_records(data_raw)
     # Drop all duplicates
 
-    data_unique = data_all.drop_duplicates(subset=['Candidate','Obsid','CCD'])
+    data_unique = data_all.drop_duplicates()
 
     # Keep only data satisfying the following conditions
 
@@ -78,7 +112,9 @@ if __name__=="__main__":
 
     # Sort according to PSFfrac
 
-    master_data_sorted = sorted(data_unique[idx], key=lambda data_row: data_row[-1], reverse=True)
+    data_filtered = data_unique[idx]
+
+    master_data_sorted = sorted(data_filtered.values.tolist(), key=lambda data_row: data_row[-1], reverse=True)
 
     # Write data to text file
 
@@ -103,6 +139,8 @@ if __name__=="__main__":
             f.write("%s\n" % line)
 
             i += 1
+
+    os.remove('__temp.txt')
 
 
 
