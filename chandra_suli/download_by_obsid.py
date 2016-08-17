@@ -60,7 +60,7 @@ if __name__ == "__main__":
 
         # Download exposure map
 
-        cmd_line = ("obsid_search_csc obsid=%d download=all outfile=%d.tsv filetype=exp,evt "
+        cmd_line = ("obsid_search_csc obsid=%d download=all outfile=%d.tsv filetype=exp,evt,fov "
                     "mode=h clobber=yes verbose=0 "
                     "columns=m.ra,m.dec,o.theta,m.extent_flag,m.var_flag"
                     % (args.obsid, args.obsid))
@@ -78,15 +78,17 @@ if __name__ == "__main__":
     exp_files = find_files.find_files(work_dir,"*%s*exp3.fits.gz" % args.obsid)
     asol_files = find_files.find_files(work_dir,'*asol*.fits.gz')
     pbk_files = find_files.find_files(work_dir,'*pbk*.fits.gz')
+    fov_files = find_files.find_files(work_dir,"*%s*fov3.fits.gz" % args.obsid)
 
 
-    if len(evt3_files) > 1 or len(tsv_files) > 1 or len(exp_files) > 1 or len(pbk_files) > 1:
+    if len(evt3_files) > 1 or len(tsv_files) > 1 or len(exp_files) > 1 or len(pbk_files) > 1 or len(fov_files) > 1:
 
         raise RuntimeError("More than one event file in this tree. Did you clean up the directory before running "
 
                            "this script?")
 
-    elif len(evt3_files)==0 or len(tsv_files)==0 or len(exp_files)==0 or len(asol_files)==0 or len(pbk_files)==0:
+    elif len(evt3_files)==0 or len(tsv_files)==0 or len(exp_files)==0 or len(asol_files)==0 \
+            or len(pbk_files)==0 or len(fov_files)==0:
 
         raise RuntimeError("Could not find some of the downloaded files. Maybe download failed?")
 
@@ -97,6 +99,7 @@ if __name__ == "__main__":
         exp = exp_files[0]
         asol = ",".join(asol_files)
         pbk = pbk_files[0]
+        fov = fov_files[0]
 
     # The r4_header_update script cannot run on a compressed fits file, so decompress the eventfile
 
@@ -113,7 +116,7 @@ if __name__ == "__main__":
 
     # move evt3 file and delete empty directories
 
-    for this_file in [evt3, tsv, exp]:
+    for this_file in [evt3, tsv, exp, fov]:
 
         os.rename(this_file,os.path.basename(this_file))
 
