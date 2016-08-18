@@ -56,6 +56,13 @@ if __name__=="__main__":
         regions = find_files.find_files(os.path.join(data_path, str(obsid)), "ccd_%s_%s_filtered_candidate_%s.reg" %(ccd, obsid, candidate))
         event_file = find_files.find_files(os.path.join(data_path, str(obsid)), "ccd_%s_%s_filtered.fits" %(ccd, obsid))[0]
 
+        TI_file = os.path.join(os.path.join(data_path, str(obsid)), 'ccd_%s_%s_filtered_TI_%s.fits' %(ccd,obsid,candidate))
+
+        cmd_line = 'ftcopy \"%s[(TIME >= %s) && (TIME <= %s)]\" %s clobber=yes ' \
+                   % (event_file, tstart, tstop, TI_file)
+
+        runner.run(cmd_line)
+
         if len(regions) != 1:
 
             raise IOError("More than one region file found")
