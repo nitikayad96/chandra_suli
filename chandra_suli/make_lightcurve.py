@@ -53,8 +53,8 @@ if __name__=="__main__":
 
         # use region file from xtdac and cut region
 
-        regions = find_files.find_files(str(obsid), "ccd_%s_%s_filtered_candidate_%s.reg" %(ccd, obsid, candidate))
-        event_file = find_files.find_files(str(obsid), "ccd_%s_%s_filtered.fits" %(ccd, obsid))[0]
+        regions = find_files.find_files(os.path.join(data_path, str(obsid)), "ccd_%s_%s_filtered_candidate_%s.reg" %(ccd, obsid, candidate))
+        event_file = find_files.find_files(os.path.join(data_path, str(obsid)), "ccd_%s_%s_filtered.fits" %(ccd, obsid))[0]
 
         if len(regions) != 1:
 
