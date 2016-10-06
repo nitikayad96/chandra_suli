@@ -77,9 +77,11 @@ if __name__=="__main__":
         # Create individual time interval files
         for i in range(len(intervals)-1):
 
-            outfile = "%s_TI_%s%s" %(evt_names[0], i+1, evt_names[1])
+            outfile = os.path.join(data_path, str(obsid), "%s_TI_%s_cand_%s%s" %(evt_names[0], i+1, candidate, evt_names[1]))
 
             cmd_line = 'ftcopy \"%s[(TIME >= %s) && (TIME <= %s)]\" %s clobber=yes ' \
                        % (event_file, intervals[i], intervals[i+1], outfile)
 
-        
+            runner.run(cmd_line)
+
+
