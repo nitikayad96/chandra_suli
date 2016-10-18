@@ -61,18 +61,32 @@ if __name__=="__main__":
             tmin = reg['EVENTS'].header['TSTART']
             tmax = reg['EVENTS'].header['TSTOP']
 
+        print "Duration: %s" %duration
+        print "Tmax: %s" %tmax
+        print "Tmin: %s" %tmin
+        print "Obs Time: %s" %(tmax-tmin)
+
         # Ensure that there will only be a maximum of 5 frames
-        if len(intervals) <= 7:
+        while len(intervals) < 7:
 
             # this loop creates a list of time intervals with which to create gif from
 
-            if tmin < intervals[0] - duration:
+            if tmin < (intervals[0] - duration) or tmax > (intervals[-1] + duration):
 
-                intervals[0] = intervals[0] - duration
+                if tmin < intervals[0] - duration:
 
-            if tmax > intervals[-1] + duration:
+                    intervals.insert(0,intervals[0] - duration)
 
-                    intervals[-1] = intervals[-1] + duration
+                if tmax > intervals[-1] + duration:
+
+                        intervals.append(intervals[-1] + duration)
+
+            else:
+
+                break
+
+
+        print intervals
 
 
         evt_names = os.path.splitext(event_file)
@@ -132,8 +146,10 @@ if __name__=="__main__":
         fig2 = plt.figure()
 
         #animate and save gif
-        print "Creating gif ObsID %s, CCD %s, Candidate %s..." %(obsid, ccd, candidate)
+        print "Creating gif ObsID %s, CCD %s, Candidate %s...\n" %(obsid, ccd, candidate)
         anim = ArtistAnimation(fig2, frames, interval=200)
         anim.save("%s_cand_%s.gif" %(evt_names[0], candidate))
+
+        plt.close()
 
 
