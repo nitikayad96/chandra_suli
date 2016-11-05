@@ -1,17 +1,17 @@
-import numpy as np
+import cPickle
 import gzip
 import os
-import pandas as pd
-import cPickle
-from astropy.coordinates import SkyCoord
+
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 
 
 class ChandraSourceCatalog(object):
-
     def __init__(self):
 
         # Find the catalog data file
+
+        # TODO: Put it in the region repository
 
         catalog_filename = 'chandra_csc_1.1.pickle.gz'
 
@@ -25,7 +25,6 @@ class ChandraSourceCatalog(object):
             catalog_file = os.path.abspath(os.path.join(path, catalog_filename))
 
             if os.path.exists(catalog_file):
-
                 # Found it
                 break
 
@@ -40,6 +39,18 @@ class ChandraSourceCatalog(object):
         self._catalog = data['data_frame']
         self._sky_coords = data['sky_coords']
 
+    def _compute_distances(self, ra, dec):
+
+        # Instance the SkyCoord instance
+
+        cone_center = SkyCoord(ra=ra, dec=dec, unit='deg')
+
+        # Find all sources within the requested cone
+
+        distances = self._sky_coords.separation(cone_center).to(u.arcmin)
+
+        return distances
+
     def cone_search(self, ra, dec, radius, unit='arcmin'):
         """
         Find sources within the given radius of the given position
@@ -51,17 +62,39 @@ class ChandraSourceCatalog(object):
         :return: a pandas DataFrame containing the sources within the given radius
         """
 
-        # Instance the SkyCoord instance
+        distances = self._compute_distances(ra, dec)  # arcmin
 
-        cone_center = SkyCoord(ra=ra, dec=dec, unit='deg')
-
-        # Find all sources within the requested cone
-
-        idx = self._sky_coords.separation(cone_center) <= radius * u.Unit(unit)
+        idx = distances <= radius * u.Unit(unit)
 
         # Return the results
 
-        return self._catalog[idx]
+        # Copy the array, to avoid returning a slice instead
+
+        results = self._catalog.copy().loc[idx]
+
+        # Add the distance column
+        results['distance'] = distances[idx]
+
+        return results
+
+    def find_closest_source(self, ra, dec):
+        """
+        Finds the closest source to the given position
+
+        :param ra:
+        :param dec:
+        :return:
+        """
+
+        distances = self._compute_distances(ra, dec)  # arcmin
+
+        temp_catalog = self._catalog.copy()
+
+        temp_catalog['distance'] = distances
+
+        src_id = temp_catalog['distance'].argmin()
+
+        return temp_catalog.loc[src_id, :]
 
     def find_variable_sources(self, ra, dec, radius, unit='arcmin', column='var_flag'):
         """
@@ -79,6 +112,33 @@ class ChandraSourceCatalog(object):
         temp_results = self.cone_search(ra, dec, radius, unit=unit)
 
         # Now select only the variable sources
-        idx = temp_results[column]==True
+        idx = temp_results[column] == True
 
-        return temp_results[idx]
+        # Get a copy
+        results = temp_results.copy().loc[idx]
+
+        return results
+
+    def find_closest_variable_source(self, ra, dec, column='var_flag'):
+        """
+        Finds the closest source to the given position
+
+        :param ra:
+        :param dec:
+        :return:
+        """
+
+        distances = self._compute_distances(ra, dec)  # arcmin
+
+        temp_catalog = self._catalog.copy()
+
+        temp_catalog['distance'] = distances
+
+        # Select only variable sources
+        idx = temp_catalog[column] == True
+
+        variable_sources = temp_catalog.copy().loc[idx]
+
+        src_id = variable_sources['distance'].argmin()
+
+        return variable_sources.loc[src_id, :]

@@ -5,19 +5,19 @@ Create the database of the regions, containing the R.A,Dec of each source and th
 """
 
 import argparse
-import os
-import sys
-import re
-import astropy.io.fits as pyfits
-import fitsio
 import collections
+import os
+import re
+import sys
+
+import fitsio
 
 from chandra_suli import find_files
 from chandra_suli import work_within_directory
 from chandra_suli.logging_system import get_logger
 from chandra_suli.sanitize_filename import sanitize_filename
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Create source database')
 
@@ -47,7 +47,7 @@ if __name__=="__main__":
 
         for i, region_file in enumerate(region_files):
 
-            sys.stderr.write("\r%s out of %s" % (i+1, len(region_files)))
+            sys.stderr.write("\r%s out of %s" % (i + 1, len(region_files)))
 
             header = fitsio.read_header(region_file, "SRCREG")
 
@@ -107,7 +107,6 @@ if __name__=="__main__":
         f.write("#NAME RA DEC OBSID REGION_FILE\n")
 
         for source_name in db:
-
             ra, dec, obsid, region_file = db[source_name]
 
             f.write("%s %.5f %.5f %i %s\n" % (source_name, ra, dec, obsid, region_file))

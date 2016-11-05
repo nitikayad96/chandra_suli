@@ -13,31 +13,30 @@ dmcopy "acisf00635_000N001_evt3.fits[exclude sky=region(acisf00635_000N001_r0101
 """
 
 import argparse
-import subprocess
+import glob
 import os
-import warnings
+import re
 import sys
+import warnings
+
 import astropy.io.fits as pyfits
 import numpy as np
-import glob
-import re
 
-from chandra_suli import sanitize_filename
-from chandra_suli import query_region_db
 from chandra_suli import find_files
-from chandra_suli import setup_ftools
-from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli import query_region_db
+from chandra_suli import sanitize_filename
+from chandra_suli import setup_ftools
+from chandra_suli.data_package import DataPackage
+from chandra_suli.run_command import CommandRunner
 
 
 def is_variable(tsv_file, name_of_the_source):
-
     # Read data from tsv file
-    tsv_data = np.array(np.recfromtxt(tsv_file, delimiter='\t', skip_header=11,names=True), ndmin=1)
+    tsv_data = np.array(np.recfromtxt(tsv_file, delimiter='\t', skip_header=11, names=True), ndmin=1)
 
     # Make sure data is vectorized
     if len(tsv_data.shape) == 0:
-
         tsv_data = np.array([tsv_data])
 
     tsv_names = tsv_data['name'].tolist()
@@ -47,12 +46,10 @@ def is_variable(tsv_file, name_of_the_source):
 
     # See if associated var_flag is True (some are strings with spaces, some are bools)
     if str(tsv_data['var_flag'][idx]) == "TRUE" or str(tsv_data['var_flag'][idx]) == " TRUE":
-
         return True
 
 
 def cross_match(region_files_db, region_files_obsid):
-
     # Get the names of all the sources contained respectively in the OBSID catalog and in the DB catalog
 
     names_obsid = map(lambda x: re.match('(.+)/(CXOJ.+)/.+', x).groups()[1], region_files_obsid)
@@ -81,11 +78,9 @@ def cross_match(region_files_db, region_files_obsid):
         else:
 
             if args.debug:
-
                 print region_files_db[index]
 
             region_files_db.pop(index)
-
 
     cleaned_regions = list(region_files_obsid)
 
@@ -94,30 +89,31 @@ def cross_match(region_files_db, region_files_obsid):
     return cleaned_regions
 
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Filter known sources out of event file')
 
-    parser.add_argument('--evtfile', help="Name of the event file", type=str, required=True)
+    parser.add_argument('--in_package', help="Data package directory for the input data", type=str, required=True)
 
     parser.add_argument('--region_dir', help="Directory containing the regions file for this obsid",
                         type=str, required=True)
 
-    parser.add_argument('--tsvfile', help="Name of TSV file", type=str, required=True)
-
-    parser.add_argument('--outfile', help="Name of the output (filtered) event file", type=str, required=True)
+    parser.add_argument('--out_package', help="Data package directory for the output data", type=str, required=True)
 
     parser.add_argument("--debug", help="Debug mode (yes or no)", type=bool, required=False, default=False)
 
-    parser.add_argument("--emin",help="Minimum energy (eV)",type=int,required=True)
+    parser.add_argument("--emin", help="Minimum energy (eV)", type=int, required=True)
 
-    parser.add_argument("--emax",help="Maximum energy (eV)",type=int,required=True)
+    parser.add_argument("--emax", help="Maximum energy (eV)", type=int, required=True)
 
     parser.add_argument("--adj_factor",
                         help="If region files need to be adjusted, what factor to increase axes of ellipses by",
                         type=float, required=True)
 
+    parser.add_argument("--randomize_time", help='Whether to randomize the arrival time within the time frames',
+                        required=True, dest='randomize_time', action='store_true')
+
+    parser.set_defaults(randomize_time=True)
 
     # assumption = all level 3 region files and event file are already downloaded into same directory
 
@@ -132,10 +128,10 @@ if __name__=="__main__":
     args = parser.parse_args()
 
     # Setup the FTOOLS so they can be run non-interactively
-    
+
     setup_ftools.setup_ftools_non_interactive()
 
-    #creates text file with name of all level 3 region files for given Obs ID
+    # creates text file with name of all level 3 region files for given Obs ID
 
     region_dir = sanitize_filename.sanitize_filename(args.region_dir)
 
@@ -149,9 +145,13 @@ if __name__=="__main__":
 
     region_files_obsid = find_files.find_files(region_dir, "*reg3.fits.gz")
 
+    # Open the data package
+    data_package = DataPackage(args.in_package)
+
     # Get the pointing from the event file
 
-    evtfile = sanitize_filename.sanitize_filename(args.evtfile)
+    evtfile = data_package.get('evt3').filename
+    fovfile = data_package.get('fov3').filename
 
     with pyfits.open(evtfile) as f:
 
@@ -175,36 +175,35 @@ if __name__=="__main__":
 
     n_reg = len(region_files)
 
-    # Loop over the region files and filter out the corresponding events
+    # Loop over the region files and prepare the corresponding region for filtering
 
     temp_files = []
 
+    # This will be set to True if there is at least one source which might have produced streaks of out-of-time events
+    might_have_streaks = False
+
     for region_id, region_file in enumerate(region_files):
 
-        sys.stderr.write("\rProcessing region %s out of %s ..." % (region_id+1, len(region_files)))
+        if region_id % 50 == 0 or region_id == len(region_files) - 1:
+            sys.stderr.write("\rProcessing region %s out of %s ..." % (region_id + 1, len(region_files)))
 
         temp_file = '__%d_reg_revised.fits' % (region_id)
 
         # Remove the file if existing
         if os.path.exists(temp_file):
-
             os.remove(temp_file)
 
-        cmd_line = 'dmcopy %s[SRCREG][SHAPE=Ellipse] %s clobber=yes' % (region_file, temp_file)
+        cmd_line = '''ftcopy '%s[SRCREG][SHAPE=="Ellipse"]' %s clobber=yes''' % (region_file, temp_file)
 
-        if args.debug:
-
-            print(cmd_line)
-
-        subprocess.check_call(cmd_line, shell=True)
+        runner.run(cmd_line, debug=True)
 
         # Fix the column format, if needed
 
         cmd_line = "fcollen '%s' X 1" % temp_file
-        subprocess.check_call(cmd_line, shell=True)
+        runner.run(cmd_line, debug=True)
 
         cmd_line = "fcollen '%s' Y 1" % temp_file
-        subprocess.check_call(cmd_line, shell=True)
+        runner.run(cmd_line, debug=True)
 
         # Adjust the size of the ellipse, if this source is variable
 
@@ -214,29 +213,66 @@ if __name__=="__main__":
         # so the second-last element is the name of the source
 
         source_name = os.path.basename(os.path.split(region_file)[-2])
-        source_name = source_name[0:3]+" "+source_name[3::]
+        source_name = source_name[0:3] + " " + source_name[3::]
 
         ##########################
         # Crossmatch with tsv file
         ##########################
 
-        try:
+        if args.adj_factor > 1:
 
-            if is_variable(args.tsvfile, source_name) == True:
+            try:
 
-                # open the file with "mode='update'"
+                if is_variable(data_package.get('tsv').filename, source_name) == True:
+                    # open the file with "mode='update'"
 
-                with pyfits.open(temp_file, mode='update', memmap=False) as reg:
+                    with pyfits.open(temp_file, mode='update') as reg:
+                        reg['SRCREG'].data.R = args.adj_factor * reg['SRCREG'].data.R
 
-                    reg['SRCREG'].data.R = args.adj_factor * reg['SRCREG'].data.R
+                        # data, h = fitsio.read(temp_file, ext='SRCREG', header=True)
+                        #
+                        # data['R']  = args.adj_factor * data['R']
+                        #
+                        # fitsio.write(temp_file, data, extname='SRCREG', header=h, clobber=True)
 
-                # adjust the size of both axis by a factor (another argument)
+                        # adjust the size of both axis by a factor (another argument)
 
-        except ValueError:
+            except ValueError:
 
-            pass
+                pass
 
         temp_files.append(temp_file)
+
+        ##############$$$######################
+        # Check if it might have caused streaks
+        #################$$$###################
+
+        # Avoid checking again if we know that there are already streaks (the presence of one streaking source
+        # will cause the run of the de-streaking tool whether or not there are other streaking sources)
+
+        if not might_have_streaks:
+
+            # Open the region file and get the countrate for this source
+
+            with pyfits.open(temp_file) as f:
+
+                # Total number of counts in the region
+                roi_cnts = f['SRCREG'].header.get("ROI_CNTS")
+
+                # Exposure
+                exposure = f['SRCREG'].header.get("EXPOSURE")
+
+                # Get the average rate
+                rate = roi_cnts / float(exposure)
+
+                # The readout time of the whole array is 3.2 s
+
+                target_rate = 1.0 / 3.2
+
+                if rate >= target_rate / 10.0:
+                    # Source might generate out-of-time (readout streak) events
+
+                    might_have_streaks = True
 
     sys.stderr.write("Done\n")
 
@@ -246,70 +282,169 @@ if __name__=="__main__":
     with open(regions_list_file, "w+") as f:
 
         for temp_file in temp_files:
-
             f.write("%s\n" % temp_file)
 
     # Merge all the region files
 
     print("Merging region files...")
 
-    all_regions_file = '%s_all_regions.fits' %(obsid)
+    all_regions_file = '%s_all_regions.fits' % (obsid)
 
     cmd_line = 'ftmerge @%s %s clobber=yes columns=-' % (regions_list_file, all_regions_file)
 
-    if args.debug:
-
-        print(cmd_line)
-
-    subprocess.check_call(cmd_line, shell=True)
+    runner.run(cmd_line)
 
     # Now fix the COMPONENT column (each region must be a different component, otherwise
     # dmcopy will crash)
 
-    fits_file = pyfits.open(all_regions_file, mode='update',memmap=False)
+    fits_file = pyfits.open(all_regions_file, mode='update', memmap=False)
 
     fits_file['SRCREG'].data.COMPONENT[:] = range(fits_file['SRCREG'].data.shape[0])
 
     fits_file.close()
 
+    # Add the region file to the output package
+
+    output_package = DataPackage(args.out_package)
+
+    output_package.store('all_regions', all_regions_file, "FITS file containing the regions relative to all sources "
+                                                          "for this OBSID")
+
     # Finally filter the file
 
     print("Filtering event file...")
 
-    # Remove the outfile if existing
-    if os.path.exists(args.outfile):
+    ###########################
+    # Filter by energy
+    ###########################
 
-        os.remove(args.outfile)
+    temp_filter = '__temp__%s' % obsid
 
-    # first filter regions out, create temp file
+    cmd_line = 'dmcopy %s[energy=%d:%d] %s opt=all clobber=yes' % (evtfile, args.emin, args.emax, temp_filter)
 
-    temp_filter = '__temp__%s' %args.outfile
+    runner.run(cmd_line)
+
+    ###########################
+    # Filter by regions
+    ###########################
+
+    outfile = '%s_filtered_evt3.fits' % obsid
 
     cmd_line = 'dmcopy \"%s[exclude sky=region(%s)]\" ' \
-               '%s opt=all clobber=yes' % (args.evtfile, all_regions_file, temp_filter)
+               '%s opt=all clobber=yes' % (temp_filter, all_regions_file, outfile)
 
-    if args.debug:
+    runner.run(cmd_line)
 
-        print(cmd_line)
+    ###########################
+    # Remove readout streaks
+    ###########################
 
-    subprocess.check_call(cmd_line, shell=True)
+    # If we might have streaks, run the tool which generates the region for the streaks
 
-    cmd_line = 'dmcopy %s[energy=%d:%d] %s opt=all clobber=yes' %(temp_filter, args.emin, args.emax, args.outfile)
+    if might_have_streaks:
 
-    if args.debug:
+        logger.warn("We might have readout streak. Cleaning them out...")
 
-        print(cmd_line)
+        streak_region_fileroot = "streakreg"
 
-    subprocess.check_call(cmd_line, shell=True)
+        streak_region_ds9 = "%s.reg" % streak_region_fileroot
 
-    # TODO: remove files
+        # Run the tool which produces a region file with the streak
+        cmd_line = 'acis_streak_map infile=%s fovfile=%s bkgroot=__bkg ' \
+                   'regfile=%s clobber=yes msigma=3' % (outfile, fovfile, streak_region_ds9)
+
+        runner.run(cmd_line)
+
+        # Check if acis_streak_map has found anything
+        with open(streak_region_ds9) as f:
+
+            lines = f.readlines()
+
+        if len(filter(lambda x: x.find("Polygon") >= 0, lines)) == 0:
+
+            # No streak found
+            logger.warn("No streak found by acis_streak_map")
+
+        else:
+
+            # Transform in FITS format
+
+            streak_region_file = "%s.fits" % (streak_region_fileroot)
+
+            cmd_line = "dmmakereg 'region(%s.reg)' %s kernel=fits clobber=yes" % (streak_region_fileroot,
+                                                                                  streak_region_file)
+
+            runner.run(cmd_line)
+
+            # Now change the name of the extension to conform to the other region files
+
+            with pyfits.open(streak_region_file) as f:
+
+                header = f['REGION'].header
+
+                header.set("EXTNAME", "SRCREG")
+                header.set("HDUNAME", "SRCREG")
+
+                f.writeto(streak_region_file, clobber=True)
+
+            temp_out = '__temp_out.fits'
+
+            cmd_line = 'dmcopy \"%s[exclude sky=region(%s)]\" ' \
+                       '%s opt=all clobber=yes' % (outfile, streak_region_file, temp_out)
+
+            runner.run(cmd_line)
+
+            os.remove(outfile)
+
+            os.rename(temp_out, outfile)
+
+            # Store the streak regions in the output package
+            output_package.store("streak_regions_ds9", streak_region_ds9,
+                                 "Regions containing streaks from bright point sources (out-of-time events)")
+
+    ##############################
+    # Randomize time             #
+    ##############################
+
+    with pyfits.open(outfile, mode='update') as f:
+
+        time = f['EVENTS'].data.time
+
+        frame_time = f['EVENTS'].header['TIMEDEL']
+
+        logger.info("Found a frame time of %s. Randomizing arrival times within time frame..." % (frame_time))
+
+        deltas = np.random.uniform(-frame_time/2.0, frame_time/2.0, time.shape[0])
+
+        time += deltas
+
+        f["EVENTS"].data.time[:] = time
+
+    # Now sort the file
+    cmd_line = "fsort %s[EVENTS] TIME heap" % outfile
+
+    runner.run(cmd_line)
+
+    # Store output in the output package
+    output_package.store("filtered_evt3", outfile, "Event file (Level 3) with all point sources in the CSC, "
+                                                   "as well as out-of-time streaks (if any), removed")
+
+    # remove files
     files_to_remove = glob.glob("__*")
 
     if not args.debug:
 
         for file in files_to_remove:
 
-            os.remove(file)
+            try:
+
+                os.remove(file)
+
+            except:
+
+                logger.warn("Could not remove %s" % file)
+
+
 
     else:
 

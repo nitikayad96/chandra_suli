@@ -5,14 +5,15 @@ import glob
 import os
 import shutil
 import subprocess
-import traceback
 import sys
+import traceback
 
-from chandra_suli.work_within_directory import work_within_directory
+from chandra_suli.data_package import DataPackage
 from chandra_suli.sanitize_filename import sanitize_filename
+from chandra_suli.work_within_directory import work_within_directory
+
 
 def clean_up(this_workdir):
-
     # First move out of the workdir
     os.chdir(os.path.expanduser('~'))
 
@@ -32,9 +33,7 @@ def clean_up(this_workdir):
 
 
 def copy_directory(data_dir, workdir):
-
     if data_dir[-1] == '/':
-
         data_dir = data_dir[:-1]
 
     data_dir_basename = os.path.split(data_dir)[-1]
@@ -105,19 +104,16 @@ if __name__ == "__main__":
     outdir = sanitize_filename(args.outdir)
 
     if not os.path.exists(outdir):
-
         raise IOError("You need to create the directory %s before running this script" % outdir)
 
     indir = sanitize_filename(args.indir)
 
     if not os.path.exists(indir):
-
         raise IOError("Input data repository %s does not exist" % indir)
 
     regdir = sanitize_filename(args.regdir)
 
     if not os.path.exists(regdir):
-
         raise IOError("Input region repository %s does not exist" % regdir)
 
     # First step of a farm job: Stage-in
@@ -146,49 +142,26 @@ if __name__ == "__main__":
 
     for this_obsid in args.obsid:
 
-        try:
+        # now you have to go there
+        with work_within_directory(workdir):
 
-            # now you have to go there
-            with work_within_directory(workdir):
+            try:
 
                 # copy parameter files into this directory to avoid any glitches with the NFS
 
-                par_files = glob.glob(os.path.join(os.path.expanduser('~/pfiles'),'*.par'))
+                par_files = glob.glob(os.path.join(os.path.expanduser('~/pfiles'), '*.par'))
 
                 for par_file in par_files:
-
                     shutil.copy(par_file, workdir)
 
-                # Copy in the input files
+                # Execute job
 
-                data_dir = os.path.join(indir, str(this_obsid))
-
-                ########
-                # Copy input dir
-                ########
-
-                local_data_dir = copy_directory(data_dir, workdir)
-
-                ######
-                # Copy region repository
-                ######
-                #
-                # os.makedirs('regions')
-                #
-                # reg_dir = os.path.join(regdir, str(this_obsid))
-                #
-                # local_reg_dir = copy_directory(reg_dir, 'regions')
-
-                # Remove from the directory name the obsid, so that /dev/shm/1241/regions/616 becomes
-                # /dev/shm/1241/regions
-
-                # local_reg_repo = os.path.sep.join(os.path.split(local_reg_dir)[:-1])
-
-                cmd_line = "farm_step2.py --obsid %s --region_repo %s --adj_factor %s " \
+                cmd_line = "farm_step2.py -d %s --obsid %s --region_repo %s --adj_factor %s " \
                            "--emin %s --emax %s --ncpus %s --typeIerror %s --sigmaThreshold %s " \
-                           "--multiplicity %s --verbosity %s" % (this_obsid, args.regdir, args.adj_factor,
+                           "--multiplicity %s --verbosity %s" % (indir, this_obsid, args.regdir, args.adj_factor,
                                                                  args.emin, args.emax, args.ncpus,
-                                                                 args.typeIerror, args.sigmaThreshold, args.multiplicity,
+                                                                 args.typeIerror, args.sigmaThreshold,
+                                                                 args.multiplicity,
                                                                  args.verbosity)
 
                 # Do whathever
@@ -198,47 +171,35 @@ if __name__ == "__main__":
 
                 subprocess.check_call(cmd_line, shell=True)
 
-        except:
+            except:
 
-            traceback.print_exc()
+                traceback.print_exc()
 
-            print(sys.exc_info())
+                print(sys.exc_info())
 
-            print("Cannot execute command: %s" % cmd_line)
-            print("Maybe this will help:")
-            print("\nContent of directory:\n")
+                print("Cannot execute command: %s" % cmd_line)
+                print("Maybe this will help:")
+                print("\nContent of directory:\n")
 
-            subprocess.check_call("ls", shell=True)
+                subprocess.check_call("ls", shell=True)
 
-            print("\nFree space on disk:\n")
-            subprocess.check_call("df . -h", shell=True)
+                print("\nFree space on disk:\n")
+                subprocess.check_call("df . -h", shell=True)
 
-        else:
+            else:
 
-            # Stage-out
+                # Stage-out
 
-            print("\n\nStage out\n\n")
+                print("\n\nStage out\n\n")
 
-            with work_within_directory(workdir):
+                output_package = DataPackage(this_obsid)
 
-                output_files = glob.glob("*candidate*.reg")
+                output_package.copy_to(outdir)
 
-                output_files.extend(glob.glob("%s_all_regions.fits" %(this_obsid)))
+            finally:
 
-                output_files.extend(glob.glob("*_res.*"))
+                # This is executed in any case, whether an exception have been raised or not
+                # I use this so we are sure we are not leaving trash behind even
+                # if this job fails
 
-                output_files.extend(glob.glob("*_filtered.fits"))
-
-                for filename in output_files:
-
-                    print("%s -> %s" % (filename, outdir))
-
-                    shutil.copy(os.path.join(workdir, filename), outdir)
-
-        finally:
-
-            # This is executed in any case, whether an exception have been raised or not
-            # I use this so we are sure we are not leaving trash behind even
-            # if this job fails
-
-            clean_up(workdir)
+                clean_up(workdir)

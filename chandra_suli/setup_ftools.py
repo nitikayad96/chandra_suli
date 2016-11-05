@@ -10,6 +10,3 @@ def setup_ftools_non_interactive():
 
     os.environ['HEADASNOQUERY'] = ''
     os.environ['HEADASPROMPT'] = ''
-
-
-

@@ -1,5 +1,5 @@
-from astropy.coordinates import SkyCoord
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 
 
 def angular_distance(ra1, dec1, ra2, dec2, unit='degree'):

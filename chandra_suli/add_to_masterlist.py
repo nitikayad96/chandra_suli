@@ -5,28 +5,28 @@ Take each CCD file, already checked for hot pixels and cross matched for variabl
 transients to master list
 """
 
-import os
 import argparse
+import os
 import sys
+
 import numpy as np
 import pandas as pd
-import astropy.io.fits as pyfits
 
-from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli.data_package import DataPackage
+from chandra_suli.run_command import CommandRunner
 from chandra_suli.sanitize_filename import sanitize_filename
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Add filtered candidates to a masterlist of sources")
 
-    parser.add_argument("--bbfile",help="Input text file (already checked for hot pixels and variable sources",
+    parser.add_argument("--package", help="Data package containing the output of step 2",
                         required=True, type=str)
-    parser.add_argument("--masterfile",help="Path to file containing list of transients in this set",
+    parser.add_argument("--masterfile", help="Path to file containing list of transients in this set",
                         required=True, type=str)
-    parser.add_argument("--evtfile", help="Main event file for observation, used to get total exposure time",
-                        required=True, type=str)
+    # parser.add_argument("--evtfile", help="Main event file for observation, used to get total exposure time",
+    #                    required=True, type=str)
 
 
     # Get logger for this command
@@ -39,131 +39,123 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
-    # get directory path and file name from input file arguments
+    data_package = DataPackage(sanitize_filename(args.package))
 
-    bb_file_path = sanitize_filename(args.bbfile)
+    for bbfile_tag in data_package.find_all("ccd_?_check_var"):
 
-    masterfile = sanitize_filename(args.masterfile)
+        logger.info("Processing %s..." % bbfile_tag)
 
-    evtfile = sanitize_filename(args.evtfile)
+        bbfile = data_package.get(bbfile_tag).filename
 
-    # read BB data into array
-    bb_data = np.array(np.recfromtxt(bb_file_path,names=True), ndmin=1)
+        logger.info("(reading from file %s)" % bbfile)
 
-    # number of rows of data
-    bb_n = len(bb_data)
+        # get directory path and file name from input file arguments
 
-    # column names
-    existing_column_names = " ".join(bb_data.dtype.names)
+        bb_file_path = sanitize_filename(bbfile)
 
-    with pyfits.open(evtfile) as evt:
+        masterfile = sanitize_filename(args.masterfile)
 
-        exposure = evt['EVENTS'].header['EXPOSURE']
+        # evtfile = sanitize_filename(args.evtfile)
 
-    # If fresh list is to be started
+        # read BB data into array
+        bb_data = np.array(np.recfromtxt(bb_file_path, names=True), ndmin=1)
 
-    if not os.path.exists(masterfile):
+        # number of rows of data
+        bb_n = len(bb_data)
 
-        # new array of appropriate size
-        master_data = np.empty([0, len(bb_data[0])+1])
+        if bb_n == 0:
+            continue
 
-    else:
+        # column names
+        existing_column_names = " ".join(bb_data.dtype.names)
 
-        master_data = np.array(np.recfromtxt(masterfile, names=True), ndmin=1)
+        # with pyfits.open(evtfile) as evt:
 
-    with open('__temp.txt', "w") as temp:
+        #    exposure = evt['EVENTS'].header['EXPOSURE']
 
-        temp.write("# %s\n" % existing_column_names)
+        # If fresh list is to be started
 
-        i = 0
+        if not os.path.exists(masterfile):
 
-        while i < len(master_data):
+            # new array of appropriate size
+            master_data = np.empty([0, len(bb_data[0]) + 1])
 
-            temp_list = []
+        else:
 
+            master_data = np.array(np.recfromtxt(masterfile, names=True), ndmin=1)
 
-            for j in xrange(1,len(bb_data.dtype.names)+1):
+        with open('__temp.txt', "w") as temp:
 
-                temp_list.append(str(master_data[i][j]))
+            temp.write("# %s\n" % existing_column_names)
 
-            line = " ".join(temp_list)
+            i = 0
 
-            temp.write("%s\n" % line)
+            while i < len(master_data):
 
-            i += 1
+                temp_list = []
 
-        i = 0
+                for j in xrange(1, len(bb_data.dtype.names) + 1):
+                    temp_list.append(str(master_data[i][j]))
 
-        while i < len(bb_data):
+                line = " ".join(temp_list)
 
-            temp_list = []
+                temp.write("%s\n" % line)
 
-            for j in xrange(len(bb_data.dtype.names)):
-                temp_list.append(str(bb_data[i][j]))
+                i += 1
 
-            line = " ".join(temp_list)
+            i = 0
 
-            temp.write("%s\n" % line)
+            while i < len(bb_data):
 
-            i += 1
+                temp_list = []
 
-    data_raw = np.array(np.recfromtxt("__temp.txt", names=True), ndmin=1)
+                for j in xrange(len(bb_data.dtype.names)):
+                    temp_list.append(str(bb_data[i][j]))
 
-    data_all = pd.DataFrame.from_records(data_raw)
-    # Drop all duplicates
+                line = " ".join(temp_list)
 
-    data_unique = data_all.drop_duplicates(subset=['Candidate','Obsid','CCD'])
+                temp.write("%s\n" % line)
 
-    # Keep only data satisfying the following conditions
+                i += 1
 
-    idx = (data_unique['PSFfrac'] > 0.95) & (data_unique['Probability'] < 1e-5) \
-          & (data_unique['Hot_Pixel_Flag']==False) \
-          & (data_unique['Tstop'] - data_unique['Tstart'] <= 0.7*exposure)
+        data_raw = np.array(np.recfromtxt("__temp.txt", names=True), ndmin=1)
 
-    # Sort according to PSFfrac
+        data_all = pd.DataFrame.from_records(data_raw)
+        # Drop all duplicates
 
-    data_filtered = data_unique[idx]
+        data_unique = data_all.drop_duplicates(subset=['Candidate', 'Obsid', 'CCD'])
 
-    master_data_sorted = sorted(data_filtered.values.tolist(), key=lambda data_row: data_row[-1], reverse=True)
+        # Keep only data satisfying the following conditions (empty at the moment)
 
-    # Write data to text file
+        #idx = (data_unique['PSFfrac'] > 0)
 
-    with open(args.masterfile,"w") as f:
+        # Sort according to PSFfrac
 
-        f.write("# Rank %s\n" % existing_column_names)
+        data_filtered = data_unique#[idx]
 
-        i = 0
+        master_data_sorted = sorted(data_filtered.values.tolist(), key=lambda data_row: data_row[-1], reverse=True)
 
-        while i < len(master_data_sorted):
+        # Write data to text file
 
-            temp_list = []
+        with open(args.masterfile, "w") as f:
 
-            temp_list.append(str(i+1))
+            f.write("# Rank %s\n" % existing_column_names)
 
-            for j in xrange(len(bb_data.dtype.names)):
+            i = 0
 
-                temp_list.append(str(master_data_sorted[i][j]))
+            while i < len(master_data_sorted):
 
-            line = " ".join(temp_list)
+                temp_list = []
 
-            f.write("%s\n" % line)
+                temp_list.append(str(i + 1))
 
-            i += 1
+                for j in xrange(len(bb_data.dtype.names)):
+                    temp_list.append(str(master_data_sorted[i][j]))
 
-    os.remove('__temp.txt')
+                line = " ".join(temp_list)
 
+                f.write("%s\n" % line)
 
+                i += 1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+        os.remove('__temp.txt')

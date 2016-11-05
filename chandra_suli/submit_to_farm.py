@@ -5,15 +5,14 @@ Submit one or more obsid for processing on the Stanford computer farm
 """
 
 import argparse
-import subprocess
 import os
+import subprocess
 
 from chandra_suli.sanitize_filename import sanitize_filename
 from chandra_suli.which import which
 from chandra_suli.work_within_directory import work_within_directory
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Submit observation for processing on the computer farm')
 
@@ -91,12 +90,10 @@ if __name__=="__main__":
 
         # Create logs directory if does not exists
         if not os.path.exists('logs'):
-
             os.mkdir('logs')
 
         # Create generated_data directory, if does not exist
         if not os.path.exists('results'):
-
             os.mkdir('results')
 
         # Generate the command line
@@ -116,9 +113,10 @@ if __name__=="__main__":
                                                    args.multiplicity, args.ncpus)
 
             cmd_line = "qsub -l vmem=20gb -l nodes=1:ppn=4 -o %s/%s.out -e %s/%s.err -V " \
-                       "-F '%s' %s " %(log_path, this_obsid, log_path, this_obsid, options, exe_path)
+                       "-F '%s' %s " % (log_path, this_obsid, log_path, this_obsid, options, exe_path)
 
             return cmd_line
+
 
         for obsid in args.obsid:
 
@@ -127,5 +125,4 @@ if __name__=="__main__":
             print(this_cmd_line)
 
             if not args.test_run:
-
                 subprocess.check_call(this_cmd_line, shell=True)

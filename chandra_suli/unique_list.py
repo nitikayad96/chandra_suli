@@ -2,6 +2,7 @@
 Check for unique lists within an array
 """
 
+
 def unique_list(array, elements_to_check=0):
     """
 
@@ -23,7 +24,7 @@ def unique_list(array, elements_to_check=0):
         elements = elements_to_check
 
 
-# for each row
+    # for each row
 
     for i in range(n_rows):
 
@@ -33,7 +34,7 @@ def unique_list(array, elements_to_check=0):
 
         # for all subsequent rows
 
-        for j in range(i+1,n_rows):
+        for j in range(i + 1, n_rows):
 
             row_b = array[j]
 
@@ -44,12 +45,10 @@ def unique_list(array, elements_to_check=0):
                 equal_element = True
 
                 if row_a[k] != row_b[k]:
-
                     equal_element = False
                     break
 
             if equal_element == True:
-
                 equal_row = True
                 break
 
@@ -63,19 +62,4 @@ def unique_list(array, elements_to_check=0):
 
             unique_array.append(row_a)
 
-
     return unique_array
-
-
-
-
-
-
-
-
-
-
-
-
-
-

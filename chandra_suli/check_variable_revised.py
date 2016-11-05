@@ -7,20 +7,23 @@ NOTE: There may be more than one obsid listed for the same source
 """
 
 import argparse
-import numpy as np
-import sys
 import os
+import sys
+
+import astropy.units as u
+import numpy as np
+
 from chandra_suli import chandra_psf
-from chandra_suli import offaxis_angle
-from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli import offaxis_angle
+from chandra_suli.chandra_catalog import ChandraSourceCatalog
+from chandra_suli.run_command import CommandRunner
 
-
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Take output from Bayesian block algorithm and cross match with "
                                                  "previously flagged variable sources")
-    parser.add_argument("--bbfile",help="Path of input text file (checked for hot pixels)",required=True)
+    parser.add_argument("--bbfile", help="Path of input text file (checked for hot pixels)", required=True)
     parser.add_argument("--outfile", help="Path of out file", required=True)
     parser.add_argument("--eventfile", help="Event file (needed to gather the pointing of Chandra)", required=True,
                         type=str)
@@ -35,12 +38,15 @@ if __name__=="__main__":
 
     args = parser.parse_args()
 
+    # Instance the catalog
+    csc = ChandraSourceCatalog()
+
     # get directory path and file name from input file arguments
 
     bb_file_path = os.path.abspath(os.path.expandvars(os.path.expanduser(args.bbfile)))
 
     # read BB data into array
-    bb_data = np.array(np.recfromtxt(bb_file_path,names=True), ndmin=1)
+    bb_data = np.array(np.recfromtxt(bb_file_path, names=True), ndmin=1)
 
     # number of rows of data
     bb_n = len(bb_data)
@@ -55,7 +61,7 @@ if __name__=="__main__":
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# %s Closest_Variable_Source Separation(arcsec) Var_Obsid Theta PSF_size(arcsec) PSFfrac\n"
+        f.write("# %s Closest_Variable_Source Separation(arcsec) Var_msid Theta PSF_size(arcsec) PSFfrac\n"
                 % existing_column_names)
 
         for i in xrange(bb_n):
@@ -66,7 +72,7 @@ if __name__=="__main__":
             ra = bb_data['RA'][i]
             dec = bb_data['Dec'][i]
 
-            theta = offaxis_angle.get_offaxis_angle(ra, dec, args.eventfile)
+            theta = offaxis_angle.get_offaxis_angle(ra, dec, args.eventfile)  # arcmin
 
             psf_size = psf.get_psf_size(theta, percent_level=0.95)
 
@@ -77,7 +83,7 @@ if __name__=="__main__":
                 for j in xrange(len(bb_data.dtype.names)):
                     temp_list.append(str(bb_data[i][j]))
 
-                # Fill the columns "Closest_Variable_Source","Separation","Var_Obsid", "Theta", "PSF","PSFfrac"
+                # Fill the columns "Closest_Variable_Source","Separation","Var_msid", "Theta", "PSF","PSFfrac"
                 # with appropriate info
 
                 temp_list.append("None")
@@ -97,38 +103,7 @@ if __name__=="__main__":
 
                 radius = 5.0
 
-                temp_file = "__var_sources.tsv"
-                cmd_line = "search_csc %s,%s radius=%s outfile=%s columns=m.var_flag clobber=yes" \
-                           %(ra, dec, radius, temp_file)
-                runner.run(cmd_line)
-
-                tsv_data = np.recfromtxt(temp_file, delimiter='\t', skip_header=10, names=True,)
-
-                # Check if the data contains only one entry. If it does, we need to fix
-                # the array to the proper dimension, because np.recfromtxt makes it a 0-dimensional
-                # array
-
-                if len(tsv_data.shape) == 0:
-
-                    tsv_data = np.array([tsv_data])
-
-                # # make sure var_flag is a list
-                #
-                # var_flag = tsv_data['var_flag'].tolist()
-                #
-                # if type(var_flag).__name__ != 'list':
-                #
-                #     var_flag = [var_flag]
-                #
-                # print var_flag
-
-                # Filter out all non-variable sources
-
-                variability = np.array(map(lambda x: str(x).replace(" ", "") == "TRUE", tsv_data['var_flag']))
-
-                idx = (variability == True)
-
-                variable_sources = tsv_data[idx]
+                variable_sources = csc.find_variable_sources(ra, dec, radius, unit='arcmin', column='var_flag')
 
                 # Find source with minimum separation
 
@@ -141,7 +116,7 @@ if __name__=="__main__":
                     for j in xrange(len(bb_data.dtype.names)):
                         temp_list.append(str(bb_data[i][j]))
 
-                    # Fill the columns "Closest_Variable_Source","Separation","Var_Obsid", "Theta", "PSF","PSFfrac"
+                    # Fill the columns "Closest_Variable_Source","Separation","Var_msid", "Theta", "PSF","PSFfrac"
                     # with appropriate info
 
                     temp_list.append("None")
@@ -155,18 +130,15 @@ if __name__=="__main__":
 
                     f.write("%s\n" % line)
 
-                    os.remove(temp_file)
-
-
                 else:
 
-                    idx_min = np.argmin(variable_sources['sepn'])
+                    closest_variable_source = csc.find_closest_variable_source(ra, dec)
 
-                    # Get the name/separation/obsid of the closest variable source
+                    # Get the name/separation/msid of the closest variable source
 
-                    src_name = variable_sources['name'][idx_min]
-                    src_sepn = variable_sources['sepn'][idx_min]
-                    src_obsid = variable_sources['obsid'][idx_min]
+                    src_name = closest_variable_source['name']
+                    src_sepn = (closest_variable_source['distance'] * u.arcmin).to(u.arcsec).value
+                    src_msid = closest_variable_source['msid']
 
                     # Replace any space in the name with an underscore
                     src_name = src_name.replace(" ", "_")
@@ -176,15 +148,14 @@ if __name__=="__main__":
                     temp_list = []
 
                     for j in xrange(len(bb_data.dtype.names)):
-
                         temp_list.append(str(bb_data[i][j]))
 
-                    # Fill the columns "Closest_Variable_Source","Separation","Var_Obsid", "Theta,"PSF","PSFfrac"
+                    # Fill the columns "Closest_Variable_Source","Separation","Var_msid", "Theta,"PSF","PSFfrac"
                     # with appropriate info
 
                     temp_list.append(src_name)
                     temp_list.append(str(src_sepn))
-                    temp_list.append(str(src_obsid))
+                    temp_list.append(str(src_msid))
                     temp_list.append(str(theta))
                     temp_list.append(str(psf_size))
                     temp_list.append(str(psf_frac))
@@ -192,16 +163,3 @@ if __name__=="__main__":
                     line = " ".join(temp_list)
 
                     f.write("%s\n" % line)
-
-                    os.remove(temp_file)
-
-
-
-
-
-
-
-
-
-
-

@@ -5,26 +5,27 @@ Check to see if candidate transients are actually hot pixels
 """
 
 import argparse
+import glob
 import os
 import sys
-import numpy as np
+
 import astropy.io.fits as pyfits
-from sklearn.metrics.pairwise import euclidean_distances
+import numpy as np
 from sklearn.cluster import DBSCAN
+from sklearn.metrics.pairwise import euclidean_distances
 
-from chandra_suli import find_files
-from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli.run_command import CommandRunner
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Check to see if transient candidates are actually hot pixels")
 
-    parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True)
-    parser.add_argument("--evtfile",help="Filtered CCD file",required=True)
+    parser.add_argument("--obsid", help="Observation ID Numbers", type=int, required=True)
+    parser.add_argument("--evtfile", help="Filtered CCD file", required=True)
     parser.add_argument("--bbfile", help="Text file for one CCD with transient candidates listed", required=True)
-    parser.add_argument("--outfile",help="Name of output text file file",required=True)
-    parser.add_argument("--debug",help="Debug mode? (yes or no)", required=True)
+    parser.add_argument("--outfile", help="Name of output text file file", required=True)
+    parser.add_argument("--debug", help="Debug mode? (yes or no)", required=True)
 
     # Get logger for this command
 
@@ -42,14 +43,14 @@ if __name__=="__main__":
     bbfile = os.path.abspath(os.path.expandvars(os.path.expanduser(args.bbfile)))
 
     # read BB data into array
-    bb_data = np.array(np.recfromtxt(bbfile,names=True), ndmin=1)
+    bb_data = np.array(np.recfromtxt(bbfile, names=True), ndmin=1)
 
     evt_file_name = os.path.splitext(os.path.basename(evtfile))[0]
 
-    reg_files = find_files.find_files('.','%s_candidate*reg' %evt_file_name)
+    reg_files = glob.glob('%s_candidate*reg' % evt_file_name)
+
 
     # make sure files are sorted
-
 
     def extract_number(s):
         return int(os.path.splitext(s)[0].split("_")[-1])
@@ -63,6 +64,7 @@ if __name__=="__main__":
     idx = names.index("ccd")
 
     ccd_num = names[idx + 1]
+
 
     def neighbor_pixel_check(cluster_coords):
 
@@ -94,22 +96,20 @@ if __name__=="__main__":
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
 
-        f.write("# Candidate Obsid CCD %s Hot_Pixel_Flag\n" % existing_column_names)
+        f.write("# Candidate Obsid CCD %s Duration N_events Hot_Pixel_Flag\n" % existing_column_names)
 
         for n, reg_file in enumerate(reg_files_sorted):
-
 
             tstart = bb_data['Tstart'][n]
             tstop = bb_data['Tstop'][n]
 
-            temp_reg_file = "temp_reg_%s.fits" %(n+1)
+            temp_reg_file = "temp_reg_%s.fits" % (n + 1)
 
             # Make temporary fits region file with region determined by xtdac
-            cmd_line = 'ftcopy \"%s[EVENTS][regfilter(\'%s\') && (TIME >= %s) && (TIME <= %s)]\" %s clobber=yes '\
-                       %(evtfile, reg_file, tstart, tstop, temp_reg_file)
+            cmd_line = 'ftcopy \"%s[EVENTS][regfilter(\'%s\') && (TIME >= %s) && (TIME <= %s)]\" %s clobber=yes ' \
+                       % (evtfile, reg_file, tstart, tstop, temp_reg_file)
 
             runner.run(cmd_line)
-
 
             # Initialize hot_pix_flag to False
             hot_pix_flag = False
@@ -119,11 +119,14 @@ if __name__=="__main__":
                 chipx = reg['EVENTS'].data.chipx
                 chipy = reg['EVENTS'].data.chipy
 
+            # Count number of events in the region in this time interval
+            n_events = chipx.shape[0]
+
             if len(chipx) == 0:
 
-                print "\n\n%s had no events between %s and %s!\n\n"%(reg_file,tstart,tstop)
+                print "\n\n%s had no events between %s and %s!\n\n" % (reg_file, tstart, tstop)
 
-            elif len(chipx)<15:
+            elif len(chipx) < 15:
 
                 # Organize into list of coordinate pairs
                 coords = []
@@ -181,13 +184,11 @@ if __name__=="__main__":
                         cluster_coords = []
 
                         for idx in org_data_idx[i]:
-
                             cluster_coords.append(coords[idx])
                             x.append(coords[idx][0])
                             y.append(coords[idx][1])
 
                         if args.debug == "yes":
-
                             print cluster_coords
 
                         npx = np.array(x)
@@ -226,7 +227,6 @@ if __name__=="__main__":
                     x = []
                     y = []
                     for i in range(len(coords)):
-
                         x.append(coords[i][0])
                         y.append(coords[i][1])
 
@@ -240,7 +240,6 @@ if __name__=="__main__":
                     # If all coordinates are not same, check for neighboring pixels
 
                     if hot_pix_flag == False:
-
                         hot_pix_flag = neighbor_pixel_check(coords)
 
                     if args.debug == "yes":
@@ -250,13 +249,18 @@ if __name__=="__main__":
 
             temp_list = []
 
-            temp_list.append(str(n+1))
+            temp_list.append(str(n + 1))
             temp_list.append(str(args.obsid))
             temp_list.append(str(ccd_num))
 
             for j in range(len(bb_data.dtype.names)):
                 temp_list.append(str(bb_data[n][j]))
 
+            # Fill Duration column
+            temp_list.append("%.1f" % (tstop - tstart))
+
+            # Fill N_events column
+            temp_list.append("%i" % (n_events))
 
             # Fill "Hot_Pixel_Flag" column
 
@@ -267,16 +271,7 @@ if __name__=="__main__":
             f.write("%s\n" % line)
 
             if args.debug == "no":
-
                 os.remove(temp_reg_file)
 
-
     if args.debug == "yes":
-
         print "NOTE: Debug mode, temporary region files not deleted"
-
-
-
-
-
-

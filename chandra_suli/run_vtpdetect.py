@@ -7,15 +7,16 @@ Run CIAO tool vtpdetect to find sources in areas listed as potential transients
 import argparse
 import os
 import sys
-import astropy.io.fits as pyfits
-from astropy.coordinates import SkyCoord
-import numpy as np
 
-from chandra_suli.unique_list import unique_list
-from chandra_suli.sanitize_filename import sanitize_filename
+import astropy.io.fits as pyfits
+import numpy as np
+from astropy.coordinates import SkyCoord
+
 from chandra_suli import find_files
-from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli.run_command import CommandRunner
+from chandra_suli.sanitize_filename import sanitize_filename
+from chandra_suli.unique_list import unique_list
 
 if __name__ == "__main__":
 
@@ -59,11 +60,11 @@ if __name__ == "__main__":
         candidate = master_data['Candidate'][i]
         tstart = master_data['Tstart'][i]
         tstop = master_data['Tstop'][i]
-        obsid_dir = os.path.join(data_dir,str(obsid))
+        obsid_dir = os.path.join(data_dir, str(obsid))
 
-        all_regions_file = find_files.find_files(obsid_dir, '%s_all_regions.fits' %(obsid))[0]
-        evtfile = find_files.find_files(obsid_dir, 'ccd_%s_%s_filtered.fits' %(ccd,obsid))[0]
-        expfile = find_files.find_files(obsid_dir, '*%s*exp3*' %obsid)[0]
+        all_regions_file = find_files.find_files(obsid_dir, '%s_all_regions.fits' % (obsid))[0]
+        evtfile = find_files.find_files(obsid_dir, 'ccd_%s_%s_filtered.fits' % (ccd, obsid))[0]
+        expfile = find_files.find_files(obsid_dir, '*%s*exp3*' % obsid)[0]
 
         expfile_new = os.path.join(outdir, "%s_cheesemask.fits" % obsid)
 
@@ -72,21 +73,19 @@ if __name__ == "__main__":
             with pyfits.open(evtfile, memmap=False) as f:
 
                 if len(f) < 4:
-
-                    cmd_line = "fappend %s[1] %s" %(all_regions_file, evtfile)
+                    cmd_line = "fappend %s[1] %s" % (all_regions_file, evtfile)
                     runner.run(cmd_line)
-
 
             # run this to create filtered exposure map to match filtered event file to use during vtpdetect
 
             cmd_line = "xtcheesemask.py -i %s -r %s -o %s -s %s --no-reverse" \
-                       %(expfile, evtfile, expfile_new, args.resampleFactor)
+                       % (expfile, evtfile, expfile_new, args.resampleFactor)
 
             runner.run(cmd_line)
 
         # create new event file with just time interval found by xtdac
 
-        evtfile_new = os.path.join(outdir, 'ccd_%s_%s_filtered_TI_%s.fits' %(ccd,obsid,candidate))
+        evtfile_new = os.path.join(outdir, 'ccd_%s_%s_filtered_TI_%s.fits' % (ccd, obsid, candidate))
 
         cmd_line = 'ftcopy \"%s[(TIME >= %s) && (TIME <= %s)]\" %s clobber=yes ' \
                    % (evtfile, tstart, tstop, evtfile_new)
@@ -103,7 +102,6 @@ if __name__ == "__main__":
         coords = []
 
         for n in range(len(chipx)):
-
             temp = []
             temp.append(chipx[n])
             temp.append(chipy[n])
@@ -123,16 +121,17 @@ if __name__ == "__main__":
 
         else:
 
-            vtpdetect_file = os.path.join(outdir,'ccd_%s_%s_filtered_candidate_%s_vtpdetect.fits' %(ccd,obsid,candidate))
+            vtpdetect_file = os.path.join(outdir,
+                                          'ccd_%s_%s_filtered_candidate_%s_vtpdetect.fits' % (ccd, obsid, candidate))
 
             cmd_line = 'vtpdetect %s expfile=%s outfile=%s ellsigma=1 limit=1e-5 coarse=3 maxiter=10 scale=1 clobber=yes' \
-                       %(evtfile_new, expfile_new, vtpdetect_file)
+                       % (evtfile_new, expfile_new, vtpdetect_file)
 
             runner.run(cmd_line)
 
             # Check contents of file
 
-            with pyfits.open(vtpdetect_file,memmap=False) as h:
+            with pyfits.open(vtpdetect_file, memmap=False) as h:
 
                 regions = h['SRCLIST'].data
 
@@ -147,19 +146,17 @@ if __name__ == "__main__":
 
                         radius = max(regions['R'][j])
 
-
                         ra_reg = regions['RA'][j]
                         dec_reg = regions['DEC'][j]
 
-                        p1 = SkyCoord(ra,dec, unit = "deg")
-                        p2 = SkyCoord(ra_reg, dec_reg, unit = "deg")
+                        p1 = SkyCoord(ra, dec, unit="deg")
+                        p2 = SkyCoord(ra_reg, dec_reg, unit="deg")
 
                         sep = p2.separation(p1).arcsec
 
                         temp_list = []
 
                         if sep <= 2 * radius:
-
                             fsp = regions['FSP'][j]
 
                             temp_list.extend(master_data[i])
@@ -183,17 +180,14 @@ if __name__ == "__main__":
         current_data = []
 
         for list in old_data:
-
             current_data.append(list.tolist())
 
         for i in range(len(vtpdetect_sorted)):
-
             current_data.append(vtpdetect_sorted[i])
 
     else:
 
         current_data = vtpdetect_sorted
-
 
     with open(args.outfile, "w") as k:
 
@@ -201,25 +195,15 @@ if __name__ == "__main__":
 
         k.write("# %s Significance\n" % existing_column_names)
 
-
         for i in range(len(current_data)):
 
             temp_list = []
 
-            temp_list.append(str(i+1))
+            temp_list.append(str(i + 1))
 
-            for j in range(1,len(master_data.dtype.names)+1):
-
+            for j in range(1, len(master_data.dtype.names) + 1):
                 temp_list.append(str(current_data[i][j]))
 
             line = " ".join(temp_list)
 
             k.write("%s\n" % line)
-
-
-
-
-
-
-
-

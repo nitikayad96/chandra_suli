@@ -12,24 +12,23 @@ Make sure CIAO is running before running this script
 
 import argparse
 import os
+import shutil
 import sys
 import warnings
-import shutil
 
 import work_within_directory
 from chandra_suli import find_files
-from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli.run_command import CommandRunner
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Download event files and exposure map from the Chandra catalog')
-    parser.add_argument("--obsid",help="Observation ID Numbers", type=int, required=True)
+    parser.add_argument("--obsid", help="Observation ID Numbers", type=int, required=True)
 
     # Some of the commands need a temporary directory to write files, defined in ASCDS_WORK_PATH.
     # Enforce that such a variable is defined in the current environment
     if os.environ.get("ASCDS_WORK_PATH") is None:
-
         raise RuntimeError("You need to set the env. variable ASCDS_WORK_PATH to a writeable temporary directory")
 
     # Get logger for this command
@@ -68,18 +67,17 @@ if __name__ == "__main__":
         runner.run(cmd_line)
 
         # Download ancillary files needed by the r4_header_update script
-        cmd_line = "download_chandra_obsid %d asol,pbk -q" %(args.obsid)
+        cmd_line = "download_chandra_obsid %d asol,pbk -q" % (args.obsid)
 
         runner.run(cmd_line)
 
     # get paths of files
     evt3_files = find_files.find_files(work_dir, '*%s*evt3.fits.gz' % args.obsid)
-    tsv_files = find_files.find_files(work_dir,"%d.tsv" % args.obsid)
-    exp_files = find_files.find_files(work_dir,"*%s*exp3.fits.gz" % args.obsid)
-    asol_files = find_files.find_files(work_dir,'*asol*.fits.gz')
-    pbk_files = find_files.find_files(work_dir,'*pbk*.fits.gz')
-    fov_files = find_files.find_files(work_dir,"*%s*fov3.fits.gz" % args.obsid)
-
+    tsv_files = find_files.find_files(work_dir, "%d.tsv" % args.obsid)
+    exp_files = find_files.find_files(work_dir, "*%s*exp3.fits.gz" % args.obsid)
+    asol_files = find_files.find_files(work_dir, '*asol*.fits.gz')
+    pbk_files = find_files.find_files(work_dir, '*pbk*.fits.gz')
+    fov_files = find_files.find_files(work_dir, "*%s*fov3.fits.gz" % args.obsid)
 
     if len(evt3_files) > 1 or len(tsv_files) > 1 or len(exp_files) > 1 or len(pbk_files) > 1 or len(fov_files) > 1:
 
@@ -87,8 +85,8 @@ if __name__ == "__main__":
 
                            "this script?")
 
-    elif len(evt3_files)==0 or len(tsv_files)==0 or len(exp_files)==0 or len(asol_files)==0 \
-            or len(pbk_files)==0 or len(fov_files)==0:
+    elif len(evt3_files) == 0 or len(tsv_files) == 0 or len(exp_files) == 0 or len(asol_files) == 0 \
+            or len(pbk_files) == 0 or len(fov_files) == 0:
 
         raise RuntimeError("Could not find some of the downloaded files. Maybe download failed?")
 
@@ -117,11 +115,6 @@ if __name__ == "__main__":
     # move evt3 file and delete empty directories
 
     for this_file in [evt3, tsv, exp, fov]:
-
-        os.rename(this_file,os.path.basename(this_file))
+        os.rename(this_file, os.path.basename(this_file))
 
     shutil.rmtree(temp_dir)
-
-
-
-

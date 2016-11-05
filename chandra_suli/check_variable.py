@@ -10,17 +10,18 @@ Column 5 = Probability
 """
 
 import argparse
-import numpy as np
 import os
-from chandra_suli import work_within_directory
+
+import numpy as np
+
 from chandra_suli import angular_distance
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Take output from Bayesian block algorithm and cross match with "
                                                  "previously flagged variable sources")
-    parser.add_argument("--bbfile",help="Path of input text file",required=True)
-    parser.add_argument("--tsvfile",help="Path of tsv file",required=True)
+    parser.add_argument("--bbfile", help="Path of input text file", required=True)
+    parser.add_argument("--tsvfile", help="Path of tsv file", required=True)
     parser.add_argument("--outfile", help="Path of out file", required=True)
 
     args = parser.parse_args()
@@ -31,23 +32,23 @@ if __name__=="__main__":
     tsv_file_path = os.path.abspath(os.path.expandvars(os.path.expanduser(args.tsvfile)))
 
     # read BB data into array
-    bb_data = np.array(np.recfromtxt(bb_file_path,names=True), ndmin=1)
+    bb_data = np.array(np.recfromtxt(bb_file_path, names=True), ndmin=1)
 
     # number of rows of data
     bb_n = len(bb_data)
 
     # read tsv data into array
-    tsv_data = np.recfromtxt(tsv_file_path, delimiter='\t', skip_header=11,names=True)
+    tsv_data = np.recfromtxt(tsv_file_path, delimiter='\t', skip_header=11, names=True)
 
     # Filter out all non-variable sources
 
-    variability = np.array(map(lambda x:x.replace(" ","") == "TRUE", tsv_data['var_flag']))
+    variability = np.array(map(lambda x: x.replace(" ", "") == "TRUE", tsv_data['var_flag']))
 
     idx = (variability == True)
 
     variable_sources = tsv_data[idx]
 
-    with open(args.outfile,"w") as f:
+    with open(args.outfile, "w") as f:
 
         # Pre-existing column names
         existing_column_names = " ".join(bb_data.dtype.names)
@@ -63,7 +64,6 @@ if __name__=="__main__":
                 temp_list = []
 
                 for j in xrange(len(bb_data.dtype.names)):
-
                     temp_list.append(str(bb_data[i][j]))
 
                 temp_list.append("None")
@@ -91,7 +91,7 @@ if __name__=="__main__":
 
                 # Compute angular distance between the candidate transient and all variable sources
 
-                distances = angular_distance.angular_distance(tsv_ra,tsv_dec,bb_ra,bb_dec, unit='arcsec')
+                distances = angular_distance.angular_distance(tsv_ra, tsv_dec, bb_ra, bb_dec, unit='arcsec')
 
                 # Get the position of the minimum distance
 
@@ -102,12 +102,11 @@ if __name__=="__main__":
                 src_name = variable_sources['name'][idx_min]
 
                 # Replace any space in the name with an underscore
-                src_name = src_name.replace(" ","_")
+                src_name = src_name.replace(" ", "_")
 
                 temp_list = []
 
                 for j in xrange(len(bb_data.dtype.names)):
-
                     temp_list.append(str(bb_data[i][j]))
 
                 # Fill the column "Closest_Variable_Source" with the name of the source
@@ -121,16 +120,3 @@ if __name__=="__main__":
                 line = " ".join(temp_list)
 
                 f.write("%s\n" % line)
-
-
-
-
-
-
-
-
-
-
-
-
-

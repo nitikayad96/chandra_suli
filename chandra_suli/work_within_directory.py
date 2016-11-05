@@ -4,7 +4,6 @@ import os
 
 @contextlib.contextmanager
 def work_within_directory(directory):
-
     original_directory = os.getcwd()
 
     os.chdir(directory)

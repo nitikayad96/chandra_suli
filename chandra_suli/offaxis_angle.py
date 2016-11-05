@@ -1,23 +1,20 @@
 # Chandra. Automatically compute the step size, as the average
 # size of the PSF in the detector
 
-from astropy.coordinates import SkyCoord
 import astropy.io.fits as pyfits
 import astropy.units as u
+from astropy.coordinates import SkyCoord
 
 
 def get_offaxis_angle(ra, dec, event_file):
-
     # Get the aim point
 
     with pyfits.open(event_file) as f:
-
         ra_pointing = f['EVENTS'].header.get("RA_PNT")
         dec_pointing = f['EVENTS'].header.get("DEC_PNT")
         system = f['EVENTS'].header.get("RADECSYS")
 
     if system is None:
-
         system = 'ICRS'
 
     # Compute the corresponding off-axis angle theta

@@ -4,25 +4,23 @@
 Check each candidate transient from Bayesian Block algorithm to see if it is actually a hot pixel
 """
 
-import subprocess
 import argparse
 import os
 import sys
-import numpy as np
+
 import astropy.io.fits as pyfits
+import numpy as np
 
-from chandra_suli.run_command import CommandRunner
 from chandra_suli import logging_system
+from chandra_suli.run_command import CommandRunner
 
-
-
-if __name__=="__main__":
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Check to see if transient candidates are actually hot pixels")
 
-    parser.add_argument("--evtfile",help="Filtered CCD file",required=True)
-    parser.add_argument("--bbfile",help="Text file for one CCD with transient candidates listed",required=True)
-    parser.add_argument("--outfile",help="Name of output file",required=True)
+    parser.add_argument("--evtfile", help="Filtered CCD file", required=True)
+    parser.add_argument("--bbfile", help="Text file for one CCD with transient candidates listed", required=True)
+    parser.add_argument("--outfile", help="Name of output file", required=True)
 
     # Get logger for this command
 
@@ -38,7 +36,7 @@ if __name__=="__main__":
     bbfile = os.path.abspath(os.path.expandvars(os.path.expanduser(args.bbfile)))
 
     # read BB data into array
-    bb_data = np.array(np.recfromtxt(bbfile,names=True), ndmin=1)
+    bb_data = np.array(np.recfromtxt(bbfile, names=True), ndmin=1)
 
     # number of rows of data
     bb_n = len(bb_data)
@@ -60,7 +58,7 @@ if __name__=="__main__":
             # isolate region of event within times given
             temp_file_hp = "__check_hotpix.fits"
             cmd_line = "dmcopy \"%s[sky=circle(%sd,%sd,15'') && time=%s:%s]\" %s" \
-                       %(args.evtfile, ra, dec, tstart, tstop, temp_file_hp)
+                       % (args.evtfile, ra, dec, tstart, tstop, temp_file_hp)
 
             runner.run(cmd_line)
 
@@ -73,14 +71,11 @@ if __name__=="__main__":
                 chipy = hotpix['EVENTS'].data.chipy
 
                 if len(np.unique(chipx)) == 1 and len(np.unique(chipy)) == 1:
-
                     hotpix_flag = True
-
 
             temp_list = []
 
             for j in xrange(len(bb_data.dtype.names)):
-
                 temp_list.append(str(bb_data[i][j]))
 
             # Fill "Hot_Pixel_Flag" column
@@ -92,14 +87,3 @@ if __name__=="__main__":
             f.write("%s\n" % line)
 
             os.remove(temp_file_hp)
-
-
-
-
-
-
-
-
-
-
-

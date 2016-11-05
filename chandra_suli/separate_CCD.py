@@ -8,28 +8,34 @@ command from CIAO: dmcopy filtered_event.fits[EVENTS][ccd_id=N] out.fits clobber
 Make sure CIAO is running before running this script
 """
 
-import subprocess
 import argparse
 import os
-import astropy.io.fits as pyfits
+import subprocess
 
-if __name__=="__main__":
+import astropy.io.fits as pyfits
+from chandra_suli.run_command import CommandRunner
+from chandra_suli.logging_system import get_logger
+
+if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Create new event files separated by CCD')
 
-    parser.add_argument('--evtfile',help="Event file name", type=str, required=True)
+    parser.add_argument('--evtfile', help="Event file name", type=str, required=True)
 
     args = parser.parse_args()
 
+    logger = get_logger("separate_CCD.py")
+    runner = CommandRunner(logger)
+
     print "Separating by CCD..."
 
-    for ccd_id in xrange(10):
+    for ccd_id in range(10):
 
-        ccd_file = "ccd_%s_%s" %(ccd_id, args.evtfile)
+        ccd_file = "ccd_%s_%s" % (ccd_id, os.path.basename(args.evtfile))
 
-        cmd_line = "dmcopy %s[EVENTS][ccd_id=%s] %s clobber=yes" %(args.evtfile, ccd_id, ccd_file)
+        cmd_line = "dmcopy %s[EVENTS][ccd_id=%s] %s clobber=yes" % (args.evtfile, ccd_id, ccd_file)
 
-        subprocess.check_call(cmd_line,shell=True)
+        runner.run(cmd_line)
 
         # check if certain CCD files are empty and then delete them if so
 
@@ -37,19 +43,6 @@ if __name__=="__main__":
         ccd_data = f[1].data
 
         if len(ccd_data) == 0:
-
             os.remove(ccd_file)
 
         f.close()
-
-
-
-
-
-
-
-
-
-
-
-

@@ -13,12 +13,15 @@ import matplotlib.pyplot as plt
 import seaborn as sbs
 from matplotlib.colors import LogNorm
 from astropy.convolution import convolve, Gaussian2DKernel
-from matplotlib.animation import ArtistAnimation
+from matplotlib.animation import ArtistAnimation, FFMpegWriter
 
 from chandra_suli.find_files import find_files
 from chandra_suli import logging_system
 from chandra_suli.run_command import CommandRunner
 from chandra_suli.sanitize_filename import sanitize_filename
+
+import matplotlib
+matplotlib.use("tkagg")
 
 if __name__=="__main__":
 
@@ -28,6 +31,8 @@ if __name__=="__main__":
                         required=True, type=str)
     parser.add_argument("--data_path", help="Path to directory containing data of all obsids", required=True,
                         type=str)
+
+    parser.add_argument("--verbose-debug", action='store_true')
 
     # Get the logger
     logger = logging_system.get_logger(os.path.basename(sys.argv[0]))
@@ -52,63 +57,73 @@ if __name__=="__main__":
 
         duration = tstop-tstart
 
-        event_file = find_files(os.path.join(data_path, str(obsid)), "ccd_%s_%s_filtered.fits" % (ccd, obsid))[0]
-
-        intervals = [tstart, tstop]
+        event_file = find_files(os.path.join(data_path, str(obsid)), "ccd_%s_%s_filtered_nohot.fits" % (ccd, obsid))[0]
 
         # get start and stop time of observation
-        with pyfits.open(event_file, memmap=False) as reg:
-            tmin = reg['EVENTS'].header['TSTART']
-            tmax = reg['EVENTS'].header['TSTOP']
+        with pyfits.open(event_file, memmap=False) as event_ext:
+
+            tmin = event_ext['EVENTS'].header['TSTART']
+            tmax = event_ext['EVENTS'].header['TSTOP']
+
+            # Get minimum and maximum X and Y, so we use always the same binning for the images
+            xmin, xmax = event_ext['EVENTS'].data.field("X").min(), event_ext['EVENTS'].data.field("X").max()
+            ymin, ymax = event_ext['EVENTS'].data.field("Y").min(), event_ext['EVENTS'].data.field("Y").max()
 
         print "Duration: %s" %duration
+        print "Tmin: %s" % tmin
         print "Tmax: %s" %tmax
-        print "Tmin: %s" %tmin
         print "Obs Time: %s" %(tmax-tmin)
 
-        # Ensure that there will only be a maximum of 5 frames
-        while len(intervals) < 7:
+        # Use the interval before the transient and the interval after the transient, as well as of course
+        # the interval of the transient itself
 
-            # this loop creates a list of time intervals with which to create gif from
+        intervals = [tmin]
 
-            if tmin < (intervals[0] - duration) or tmax > (intervals[-1] + duration):
+        # Add tstart only if it is sufficiently different from tmin (so we don't get an empty interval when the
+        # transient is right at the beginning)
 
-                if tmin < intervals[0] - duration:
+        if abs(tstart - tmin) > 0.1:
 
-                    intervals.insert(0,intervals[0] - duration)
+            intervals.append(tstart)
 
-                if tmax > intervals[-1] + duration:
+        intervals.append(tstop)
 
-                        intervals.append(intervals[-1] + duration)
+        # Add tmax only if it is sufficiently different from tstop, so we don't get an empty interval when the
+        # transient is right at the end)
 
-            else:
+        if abs(tmax - tstop) > 0.1:
 
-                break
+            intervals.append(tmax)
 
-
-        print intervals
-
-
-        evt_names = os.path.splitext(event_file)
+        evt_name, evt_file_ext = os.path.splitext(os.path.basename(event_file))
 
         # Create individual time interval files
+        images = []
+
         for i in range(len(intervals)-1):
 
-            outfile = os.path.join(data_path, str(obsid), "%s_TI_%s_cand_%s%s" %(evt_names[0], i+1, candidate, evt_names[1]))
+            outfile = "%s_TI_%s_cand_%s%s" %(evt_name, i+1, candidate, evt_file_ext)
 
             cmd_line = 'ftcopy \"%s[(TIME >= %s) && (TIME <= %s)]\" %s clobber=yes ' \
                        % (event_file, intervals[i], intervals[i+1], outfile)
 
             runner.run(cmd_line)
 
-        #sort all time interval fits files
-        images = find_files('.', "%s_TI*cand_%s%s" %(evt_names[0], candidate, evt_names[1]))
-        img_sort = sorted(images)
+            images.append(outfile)
 
         #create a list of frames that will be animated into a gif
         frames = []
 
-        for image in img_sort:
+        # Prepare bins
+        xbins = np.linspace(xmin, xmax, 300)
+        ybins = np.linspace(ymin, ymax, 300)
+
+        fig = plt.figure()
+
+        sub = fig.add_subplot(111)
+        sub.set_title("ObsID %s, CCD %s \nTstart = %s, Tstop = %s" % (obsid, ccd, tstart, tstop))
+
+        for i, image in enumerate(images):
 
             #get x and y coordinates of image from fits file
             data = pyfits.getdata(image)
@@ -117,38 +132,47 @@ if __name__=="__main__":
 
             #create 2D histogram data from it
             sbs.set(rc={'axes.facecolor': 'black', 'axes.grid': False})
-            img = plt.hist2d(x, y, bins=60, norm=LogNorm())
 
-            #get binned coordinates
-            X = img[1]
-            Y = img[2]
+            hh, X, Y = np.histogram2d(x, y, bins=[xbins, ybins])
 
             #smooth data
-            gauss_kernel = Gaussian2DKernel(0.75)
-            smoothed_data_gauss = convolve(img[0], gauss_kernel)
+            gauss_kernel = Gaussian2DKernel(stddev=0.7, x_size=9, y_size=9)
+            smoothed_data_gauss = convolve(hh, gauss_kernel, normalize_kernel=True)
 
-            #format it for hot colors
-            plt.hot()
-            plt.colorbar()
+            if x.shape[0] > 0:
 
-            fig, axes = plt.subplots(nrows=1, ncols=1)
+                img = sub.imshow(smoothed_data_gauss, cmap='hot', animated=True, origin='lower')
 
-            img2 = axes.matshow(smoothed_data_gauss.T, origin='lower')
+            else:
 
-            axes.set_title("ObsID %s, CCD %s \nTstart = %s, Tstop = %s" %(obsid, ccd, tstart, tstop))
-            axes.set_yticklabels([])
-            axes.set_xticklabels([])
+                # No events in this image. Generate an empty image
+                img = sub.imshow(smoothed_data_gauss, cmap='hot', animated=True, origin='lower')
+
+            text = sub.annotate("%i / %i" % (i+1, len(images)), xy=(xbins.shape[0]/2.0, -20),
+                                xycoords='data', annotation_clip=False)
+
+            # Compute interval duration
+            dt = intervals[i+1] - intervals[i]
+
+            text2 = sub.annotate("%i events" % (x.shape[0]), xy=(-120, ybins.shape[0]/2.0),
+                                xycoords='data', annotation_clip=False)
+
+            text3 = sub.annotate("Duration: %.2f s" % (dt), xy=(-120, ybins.shape[0]/2.0 + 30),
+                                 xycoords='data', annotation_clip=False)
+
+            sub.set_yticklabels([])
+            sub.set_xticklabels([])
 
             #add this image to list of frames
-            frames.append([img2])
+            frames.append([img, text, text2, text3])
 
-        #create new figure to animate gif
-        fig2 = plt.figure()
+            # Remove the image
+            os.remove(image)
 
         #animate and save gif
         print "Creating gif ObsID %s, CCD %s, Candidate %s...\n" %(obsid, ccd, candidate)
-        anim = ArtistAnimation(fig2, frames, interval=200)
-        anim.save("%s_cand_%s.gif" %(evt_names[0], candidate))
+        anim = ArtistAnimation(fig, frames, interval=2000)
+        anim.save("%s_cand_%s.gif" %(evt_name, candidate), writer='imagemagick')
 
         plt.close()
 

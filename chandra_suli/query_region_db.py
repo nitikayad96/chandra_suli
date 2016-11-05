@@ -1,5 +1,6 @@
-import numpy as np
 import os
+
+import numpy as np
 
 from chandra_suli.angular_distance import angular_distance
 
@@ -32,7 +33,6 @@ def query_region_db(ra_center, dec_center, radius, region_dir):
     data_list = []
 
     for i in data['REGION_FILE'][idx]:
-
         data_list.append(os.path.join(region_dir, i))
 
     return data_list

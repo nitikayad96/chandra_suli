@@ -1,5 +1,4 @@
-from setuptools import setup, Extension
-
+from setuptools import setup
 
 setup(
     name="chandra_suli",
@@ -24,5 +23,6 @@ setup(
 
     install_requires=[],
 
-)
+    include_package_data=True
 
+)
